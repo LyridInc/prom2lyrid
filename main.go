@@ -5,7 +5,6 @@ import (
 	"github.com/chenjiandongx/ginprom"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"net/http"
 	"prom2lyrid/api"
