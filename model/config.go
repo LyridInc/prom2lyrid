@@ -1,6 +1,13 @@
 package model
 
 type ScrapeConfig struct {
-	ScrapeInterval string `json:"scrape_interval" binding:"required"`
-	ScrapeTimeout  string `json:"scrape_timeout" binding:"required"`
+	ScrapeInterval string `json:"scrape_interval"`
+	ScrapeTimeout  string `json:"scrape_timeout"`
+}
+
+func CreateDefaultScrapeConfig() ScrapeConfig {
+	return ScrapeConfig{
+		ScrapeInterval: "1m",
+		ScrapeTimeout:  "10m",
+	}
 }
