@@ -2,26 +2,50 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/LyridInc/go-sdk"
 	"github.com/chenjiandongx/ginprom"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"net/http"
+	"os"
 	"prom2lyrid/api"
 	"prom2lyrid/manager"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title API to Connect Prometheus Metrics to Lyrid Endpoint
+// @version 0.0.1
+// @description This is the initial definition to use Lyrid REST API
+// @termsOfService https://lyrid.io/terms-of-use
+
+// @contact.name Lyrid Support
+// @contact.url https://lyrid.io
+// @contact.email support@lyrid.io
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath /
 func main() {
 	godotenv.Load()
-	fmt.Println(go_sdk.Hello())
+
+	if os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	manager.GetInstance().Init()
 	go manager.GetInstance().Run(context.Background())
 
 	router := gin.Default()
 	router.Use(ginprom.PromMiddleware(nil))
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AddAllowHeaders("*")
+	router.Use(cors.New(config))
 	router.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
 
 	router.GET("/", func(c *gin.Context) {
@@ -38,13 +62,16 @@ func main() {
 	endpoints := router.Group("/endpoints")
 	{
 		endpoints.GET("/list", api.GetEndpoints)
-		//endpoints.GET("/get/:id", api.AddEndpoints)
 		endpoints.POST("/add", api.AddEndpoints)
-		//endpoints.PUT("/update", api.AddEndpoints)
-		//endpoints.DELETE("/delete", api.AddEndpoints)
+		endpoints.POST("/update/:id/labels", api.UpdateEndpointLabel)
+		endpoints.DELETE("/delete/:id", api.DeleteEndpoint)
 		//endpoints.POST("/get/:id", api.AddEndpoints)
 		endpoints.GET("/scrape/:id", api.ScrapeResult)
 	}
 
-	router.Run(":8081")
+	router.Use(static.Serve("/docs", static.LocalFile("./docs", true)))
+	url := ginSwagger.URL(os.Getenv("SWAGGER_ROOT_URL") + "/docs/swagger.json")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	router.Run(":" + os.Getenv("LISTENING_PORT"))
 }

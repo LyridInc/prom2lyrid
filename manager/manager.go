@@ -1,12 +1,14 @@
 package manager
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"prom2lyrid/model"
 	"sync"
@@ -19,6 +21,8 @@ type NodeManager struct {
 
 	ResultCache map[string]interface{}
 	mux         sync.Mutex
+
+	isUploading bool
 }
 
 var instance *NodeManager
@@ -33,7 +37,9 @@ func GetInstance() *NodeManager {
 
 func (manager *NodeManager) Init() {
 	manager.ConfigFile = os.Getenv("CONFIG_FILE")
+	manager.isUploading = false
 	var nodeconfig model.Node
+
 	jsonFile, err := os.Open(manager.ConfigFile)
 	// if we os.Open returns an error then handle it
 	if err != nil {
@@ -50,7 +56,7 @@ func (manager *NodeManager) Init() {
 		nodeconfig.Endpoints = make(map[string]*model.ExporterEndpoint)
 	}
 
-	defer jsonFile.Close()
+	jsonFile.Close()
 
 	manager.Node = nodeconfig
 
@@ -85,31 +91,98 @@ func (manager *NodeManager) dumpresult() []interface{} {
 
 func (manager *NodeManager) Run(ctx context.Context) {
 
-	duration, _ := time.ParseDuration("30s")
+	duration, _ := time.ParseDuration(os.Getenv("UPLOAD_INTERVAL"))
 	for c := time.Tick(duration); ; {
+		if !manager.isUploading {
+			manager.isUploading = true
 
-		manager.mux.Lock()
-		// check every n-seconds for all the metrics that is collected and updated, dump it together to lyrid serverless
-		//
-		result := manager.dumpresult()
-		fmt.Println(result)
-		//manager.ResultCache = make(map[string]interface{})
+			manager.mux.Lock()
+			// dump the cache temporarily
 
-		manager.mux.Unlock()
+			manager.mux.Unlock()
+			// check every n-seconds for all the metrics that is collected and updated, dump it together to lyrid serverless
+			//
+
+			log.Println("Uploading scrapes to gateway: ")
+			manager.Upload()
+			//result := manager.dumpresult()
+
+			//
+			//fmt.Println(result)
+			//manager.ResultCache = make(map[string]interface{})
+			manager.isUploading = false
+		}
 
 		select {
 		case <-c:
 			continue
 		case <-ctx.Done():
 			return
+
 		}
 	}
 }
 
 func (manager *NodeManager) WriteConfig() {
+	manager.mux.Lock()
 	file, _ := os.OpenFile(manager.ConfigFile, os.O_CREATE, os.ModePerm)
-	defer file.Close()
+	file.Close()
 
 	encoder := json.NewEncoder(file)
 	encoder.Encode(manager.Node)
+	manager.mux.Unlock()
+}
+
+func (manager *NodeManager) Upload() {
+	for _, endpoint := range manager.Node.Endpoints {
+		if endpoint.IsUpdated {
+
+			// todo: Change to lyrid-sdk later
+
+			url := "http://localhost:8080"
+
+			request := make(map[string]interface{})
+			request["Command"] = "UpdateScrapeResult"
+			scrapeResult := make(map[string]interface{})
+			scrapeResult["ExporterID"] = endpoint.ID
+			result, _ := json.Marshal(endpoint.Result)
+			scrapeResult["ScrapeResult"] = string(result)
+			scrapeResult["ScrapeTime"] = endpoint.LastUpdateTime.UTC()
+			request["ScapeResult"] = scrapeResult
+
+			jsonreq, _ := json.Marshal(request)
+			fmt.Println()
+			req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonreq))
+			req.Header.Add("content-type", "application/json")
+			response, err := http.DefaultClient.Do(req)
+			if err != nil {
+				return
+			}
+
+			body, _ := ioutil.ReadAll(response.Body)
+			defer response.Body.Close()
+
+			fmt.Println(string(body))
+			/*
+				var grant_json = "{\"grant_type\":\"client_credentials\"," +
+					"\"client_id\": \"" + os.Getenv("AUTH0_CLIENTID") + "\"," +
+					"\"client_secret\": \"" + os.Getenv("AUTH0_CLIENTSECRET") + "\"," +
+					"\"audience\": \"https://" + os.Getenv("AUTH0_DOMAIN") + "/api/v2/\"}"
+
+				req, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer([]byte(grant_json)))
+				req.Header.Add("content-type", "application/json")
+				response, err := http.DefaultClient.Do(req)
+				if err != nil {
+					sentry.CaptureException(err)
+					return "", err
+				}
+
+				body, _ := ioutil.ReadAll(response.Body)
+				defer response.Body.Close()
+
+				var tokenjson map[string]interface{}
+				json.Unmarshal(body, &tokenjson)
+			*/
+		}
+	}
 }

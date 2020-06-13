@@ -2,7 +2,6 @@ package model
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
@@ -32,7 +31,6 @@ type ExporterEndpoint struct {
 
 	Message   string `json:"message"`
 	IsUpdated bool   `json:"is_updated"`
-	//Result []*prom2json.Family `json:"result"`
 
 	//IsScraping bool `json:-`
 	//Stopping
@@ -40,7 +38,8 @@ type ExporterEndpoint struct {
 	DurationSinceLastUpdate time.Duration
 	LastUpdateTime          time.Time
 
-	mux sync.Mutex
+	mux    sync.Mutex
+	Result []*dto.MetricFamily `json:"-"`
 }
 
 func CreateEndpoint(url string) ExporterEndpoint {
@@ -89,6 +88,7 @@ func (endpoint *ExporterEndpoint) Scrape() ([]*dto.MetricFamily, error) {
 	}
 
 	endpoint.LastScrape = time.Now().UTC()
+	endpoint.ResetTime()
 
 	return result, nil
 }
@@ -102,11 +102,12 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 			// do not scrape
 		} else {
 
-			fmt.Println("Running endpoint: " + endpoint.URL)
-
+			log.Println("Running endpoint: " + endpoint.URL)
+			start := time.Now()
 			result, err := endpoint.Scrape()
+			endpoint.Result = result
+			log.Println("Endpoint ", endpoint.URL, " took (ms): ", time.Now().Sub(start).Milliseconds())
 			if err == nil {
-				fmt.Println(result)
 				endpoint.SetUpdate(true)
 			} else {
 				if endpoint.Status == "Warning" {
