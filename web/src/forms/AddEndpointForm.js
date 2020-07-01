@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 
 const AddEndpointForm = (props) => {
-  const initialFormState = {id: null, url: '', config:{scrape_interval:"1m", scrape_timeout: "10m"}, last_scrape:'', LastUpdateTime: ''}
+  const initialFormState = {url: ''}
   const [endpoint, setEndpoint] = useState(initialFormState)
 
   const handleInputChange = (event) => {

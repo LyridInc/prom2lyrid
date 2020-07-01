@@ -19,7 +19,7 @@ const EndpointTable = (props) => (
         props.endpoints.map((endpoint) => (
           <tr key={endpoint.id}>
             <td>{endpoint.id}</td>
-            <td><a target="_blank" href="{endpoint.url}">{endpoint.url}</a></td>
+            <td><a target="_blank" href={endpoint.url}>{endpoint.url}</a></td>
             <td>{endpoint.status}</td>
             <td>{endpoint.config.scrape_interval}</td>
             <td>{endpoint.config.scrape_timeout}</td>
