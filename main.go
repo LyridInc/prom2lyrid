@@ -9,7 +9,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"net/http"
 	"os"
 	"prom2lyrid/api"
 	"prom2lyrid/manager"
@@ -48,9 +47,10 @@ func main() {
 	router.Use(cors.New(config))
 	router.GET("/metrics", ginprom.PromHandler(promhttp.Handler()))
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "home"})
-	})
+	//router.GET("/", func(c *gin.Context) {
+	//	c.JSON(http.StatusOK, gin.H{"message": "home"})
+	//})
+	router.Use(static.Serve("/", static.LocalFile("./web/build", true)))
 
 	manager := router.Group("/manager")
 	{
