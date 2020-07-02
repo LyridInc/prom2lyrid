@@ -35,16 +35,7 @@ const App = () => {
       method: 'DELETE'
     };
     fetch('http://localhost:8081/endpoints/delete/'+id, requestOptions)
-    .then(res => res.json())
-    .then(
-      (result) => {
-        console.log(result)
-      },
-      (error) => {
-        console.log(error)
-      }
-    )
-    //setEndpoints(endpoints.filter((endpoint) => endpoint.id !== id))
+    setEndpoints(endpoints.filter((endpoint) => endpoint.id !== id))
   }
   
   useEffect(() => {

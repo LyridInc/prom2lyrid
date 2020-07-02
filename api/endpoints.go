@@ -53,6 +53,8 @@ func DeleteEndpoint(c *gin.Context) {
 		c.JSON(404, "endpoint not found")
 		return
 	}
+	delete(mgr.Node.Endpoints, id)
+	endpoint.Stop()
 }
 
 func UpdateEndpointLabel(c *gin.Context) {
