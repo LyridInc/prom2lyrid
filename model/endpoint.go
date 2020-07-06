@@ -27,7 +27,7 @@ type ExporterEndpoint struct {
 
 	Status           string            `json:"status"`
 	LastScrape       time.Time         `json:"last_scrape"`
-	AdditionalLabels map[string]string `json:"additional_labels"`
+	AdditionalLabels []string `json:"additional_labels"`
 
 	Message   string `json:"message"`
 	IsUpdated bool   `json:"is_updated"`
@@ -40,7 +40,7 @@ type ExporterEndpoint struct {
 
 	mux    sync.Mutex
 	Result []*dto.MetricFamily `json:"-"`
-	cont context.Context
+	ctx context.Context
 	cancel context.CancelFunc
 }
 
@@ -97,7 +97,7 @@ func (endpoint *ExporterEndpoint) Scrape() ([]*dto.MetricFamily, error) {
 
 func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 
-	endpoint.cont, endpoint.cancel = context.WithCancel(ctx)
+	endpoint.ctx, endpoint.cancel = context.WithCancel(ctx)
 	duration, _ := time.ParseDuration(endpoint.Config.ScrapeInterval)
 	for c := time.Tick(duration); ; {
 
@@ -126,7 +126,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 		select {
 		case <-c:
 			continue
-		case <-endpoint.cont.Done():
+		case <-endpoint.ctx.Done():
 			return
 		}
 	}

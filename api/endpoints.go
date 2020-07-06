@@ -66,7 +66,14 @@ func UpdateEndpointLabel(c *gin.Context) {
 		c.JSON(404, "endpoint not found")
 		return
 	}
-
+	var request model.ExporterEndpoint
+	if err := c.ShouldBindJSON(&request); err == nil {
+		endpoint.AdditionalLabels = request.AdditionalLabels
+		mgr.WriteConfig()
+		c.JSON(200, endpoint)
+	} else {
+		c.JSON(400, err)
+	}
 }
 
 //

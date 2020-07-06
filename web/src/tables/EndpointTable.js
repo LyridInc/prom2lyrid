@@ -26,7 +26,14 @@ const EndpointTable = (props) => (
             <td>{endpoint.last_scrape}</td>
             <td>{endpoint.LastUpdateTime}</td>
             <td>
-              <button className="button muted-button">Edit</button>
+              <button
+                onClick={() => {
+                  props.editRow(endpoint)
+                }}
+                className="button muted-button"
+              >
+                Edit
+              </button>
               <button
                 onClick={() => props.deleteEndpoint(endpoint.id)}
                 className="button muted-button"
