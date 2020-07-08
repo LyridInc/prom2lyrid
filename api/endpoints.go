@@ -55,6 +55,7 @@ func DeleteEndpoint(c *gin.Context) {
 	}
 	delete(mgr.Node.Endpoints, id)
 	endpoint.Stop()
+	mgr.WriteConfig()
 }
 
 func UpdateEndpointLabel(c *gin.Context) {
