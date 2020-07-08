@@ -125,11 +125,14 @@ func (manager *NodeManager) Run(ctx context.Context) {
 
 func (manager *NodeManager) WriteConfig() {
 	manager.mux.Lock()
-	file, _ := os.OpenFile(manager.ConfigFile, os.O_CREATE, os.ModePerm)
-	file.Close()
+	//file, _ := os.OpenFile(manager.ConfigFile, os.O_CREATE, os.ModePerm)
+	//defer file.Close()
 
-	encoder := json.NewEncoder(file)
-	encoder.Encode(manager.Node)
+	//encoder := json.NewEncoder(file)
+	//encoder.Encode(manager.Node)
+
+	f, _ := json.MarshalIndent(manager.Node, "", " ")
+	_ = ioutil.WriteFile(manager.ConfigFile, f, 0644)
 	manager.mux.Unlock()
 }
 
