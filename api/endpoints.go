@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
@@ -56,6 +57,36 @@ func DeleteEndpoint(c *gin.Context) {
 	delete(mgr.Node.Endpoints, id)
 	endpoint.Stop()
 	mgr.WriteConfig()
+}
+
+func StopEndpoint(c *gin.Context) {
+	mgr := manager.GetInstance()
+	id := c.Param("id")
+	endpoint := mgr.Node.Endpoints[id]
+
+	if endpoint == nil {
+		c.JSON(404, "endpoint not found")
+		return
+	}
+	endpoint.Status = "Stopping";
+	endpoint.Stop()
+	mgr.WriteConfig()
+	c.JSON(200, endpoint)
+}
+
+func RestartEndpoint(c *gin.Context) {
+	mgr := manager.GetInstance()
+	id := c.Param("id")
+	endpoint := mgr.Node.Endpoints[id]
+
+	if endpoint == nil {
+		c.JSON(404, "endpoint not found")
+		return
+	}
+	endpoint.Status = "Starting"
+	endpoint.Run(context.Background())
+	mgr.WriteConfig()
+	c.JSON(200, endpoint)
 }
 
 func UpdateEndpointLabel(c *gin.Context) {

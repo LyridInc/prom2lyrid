@@ -104,7 +104,6 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 		if endpoint.Status == "Error" {
 			// do not scrape
 		} else {
-
 			log.Println("Running endpoint: " + endpoint.URL)
 			start := time.Now()
 			result, err := endpoint.Scrape()
@@ -112,12 +111,18 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 			log.Println("Endpoint ", endpoint.URL, " took (ms): ", time.Now().Sub(start).Milliseconds())
 			if err == nil {
 				endpoint.SetUpdate(true)
+				endpoint.Status = "Running"
 			} else {
 				if endpoint.Status == "Warning" {
 					// check how long has it been since the last successful scrape
-
 					// if it is more than the timeout, then set to error and stop scraping
 					//endpoint.Status = "Error"
+					dur, _ := time.ParseDuration(endpoint.Config.ScrapeTimeout)
+					if (time.Since(endpoint.LastUpdateTime) > dur) {
+						endpoint.Status = "Error"
+						endpoint.Message = "Fail to scrape endpoint."
+						endpoint.Stop()
+					}
 				} else {
 					endpoint.Status = "Warning"
 				}
@@ -134,6 +139,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 
 func (endpoint *ExporterEndpoint) Stop() {
 	// Send signal to stop
+	endpoint.Status = "Stopped"
 	defer endpoint.cancel()
 	// Then wait
 }

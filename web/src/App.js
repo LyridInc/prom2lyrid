@@ -6,8 +6,8 @@ import EditEndpointForm from './forms/EditEndpointForm'
 const App = () => {
 
   const endpointsData = []
-  const ROOT_URL = 'http://localhost:8081';
-
+  const ROOT_URL = 'http://localhost:8081'
+  const [time, setTime] = useState(Date.now())
   const [endpoints, setEndpoints] = useState(endpointsData)
   const [editing, setEditing] = useState(false)
   const initialFormState = { id: null, url: '', additional_labels: [] }
@@ -69,7 +69,24 @@ const App = () => {
     setEndpoints(endpoints.filter((endpoint) => endpoint.id !== id))
   }
   
+  const restartEndpoint = (id) => {
+    fetch(ROOT_URL+"/endpoints/restart/"+id)
+    .then(res => res.json())
+    .then((result) => {
+        setEndpoints(endpoints.map((endpoint) => (endpoint.id === id ? result : endpoint)))
+    })
+  }
+  
+  const stopEndpoint = (id) => {
+    fetch(ROOT_URL+"/endpoints/stop/"+id)
+    .then(res => res.json())
+    .then((result) => {
+        setEndpoints(endpoints.map((endpoint) => (endpoint.id === id ? result : endpoint)))
+    })
+  }
+  
   useEffect(() => {
+    const interval = setInterval(() => setTime(Date.now()), 60000)
     fetch(ROOT_URL+"/endpoints/list")
     .then(res => res.json())
     .then(
@@ -86,7 +103,10 @@ const App = () => {
         console.log(error)
       }
     )
-  }, [])
+    return () => {
+        clearInterval(interval);
+      }
+  }, [time])
   
   return (
     <div className="container">
@@ -113,7 +133,7 @@ const App = () => {
         
         <div className="flex-large">
           <h2>List endpoints</h2>
-          <EndpointTable endpoints={endpoints} editRow={editRow} deleteEndpoint={deleteEndpoint}/>
+          <EndpointTable endpoints={endpoints} editRow={editRow} deleteEndpoint={deleteEndpoint} restartEndpoint={restartEndpoint} stopEndpoint={stopEndpoint}/>
         </div>
       </div>
     </div>

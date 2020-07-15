@@ -65,6 +65,8 @@ func main() {
 		endpoints.POST("/add", api.AddEndpoints)
 		endpoints.POST("/update/:id/labels", api.UpdateEndpointLabel)
 		endpoints.DELETE("/delete/:id", api.DeleteEndpoint)
+		endpoints.GET("/stop/:id", api.StopEndpoint)
+		endpoints.GET("/restart/:id", api.RestartEndpoint)
 		//endpoints.POST("/get/:id", api.AddEndpoints)
 		endpoints.GET("/scrape/:id", api.ScrapeResult)
 	}
