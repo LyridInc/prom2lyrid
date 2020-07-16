@@ -27,7 +27,7 @@ type ExporterEndpoint struct {
 
 	Status           string            `json:"status"`
 	LastScrape       time.Time         `json:"last_scrape"`
-	AdditionalLabels []string `json:"additional_labels"`
+	AdditionalLabels map[string]string `json:"additional_labels"`
 
 	Message   string `json:"message"`
 	IsUpdated bool   `json:"is_updated"`
@@ -49,6 +49,7 @@ func CreateEndpoint(url string) ExporterEndpoint {
 		ID:     uuid.New().String(),
 		URL:    url,
 		Config: CreateDefaultScrapeConfig(),
+		AdditionalLabels: map[string]string{"id": uuid.New().String()},
 	}
 }
 
@@ -112,6 +113,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 			if err == nil {
 				endpoint.SetUpdate(true)
 				endpoint.Status = "Running"
+				endpoint.Message = ""
 			} else {
 				if endpoint.Status == "Warning" {
 					// check how long has it been since the last successful scrape
@@ -125,6 +127,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 					}
 				} else {
 					endpoint.Status = "Warning"
+					endpoint.Message = "Fail to scrape endpoint."
 				}
 			}
 		}
@@ -140,6 +143,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 func (endpoint *ExporterEndpoint) Stop() {
 	// Send signal to stop
 	endpoint.Status = "Stopped"
+	endpoint.Message = ""
 	defer endpoint.cancel()
 	// Then wait
 }

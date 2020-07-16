@@ -22,7 +22,6 @@ func GetEndpoints(c *gin.Context) {
 	}
 	c.JSON(200, manager.GetInstance().Node.Endpoints)
 }
-
 //
 // @Summary Add an endpoint
 // @Description Add an endpoint

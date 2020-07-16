@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import EndpointTable from './tables/EndpointTable'
 import AddEndpointForm from './forms/AddEndpointForm'
 import EditEndpointForm from './forms/EditEndpointForm'
+import CredentialForm from './forms/CredentialForm'
 
 const App = () => {
 
@@ -9,6 +10,7 @@ const App = () => {
   const ROOT_URL = 'http://localhost:8081'
   const [time, setTime] = useState(Date.now())
   const [endpoints, setEndpoints] = useState(endpointsData)
+  const [credential, setCredential] = useState({key: '', secret: ''})
   const [editing, setEditing] = useState(false)
   const initialFormState = { id: null, url: '', additional_labels: [] }
   const [currentEndpoint, setCurrentEndpoint] = useState(initialFormState)
@@ -32,7 +34,7 @@ const App = () => {
     .then(res => res.json())
     .then(
       (result) => {
-        console.log(result)
+        //console.log(result)
         setEditing(false)
         setEndpoints(endpoints.map((endpoint) => (endpoint.id === id ? result : endpoint)))
       },
@@ -54,6 +56,25 @@ const App = () => {
       (result) => {
         console.log(result)
         setEndpoints([...endpoints, result])
+      },
+      (error) => {
+        console.log(error)
+      }
+    )
+  }
+  
+  const updateCredential = (credential) => {
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credential)
+    };
+    fetch(ROOT_URL+'/credential', requestOptions)
+    .then(res => res.json())
+    .then(
+      (result) => {
+        console.log(result)
+        setCredential(result)
       },
       (error) => {
         console.log(error)
@@ -91,7 +112,7 @@ const App = () => {
     .then(res => res.json())
     .then(
       (result) => {
-        console.log(result)
+        //console.log(result)
         const keys = Object.keys(result)
         let eps = [];
         for (const key of keys) {
@@ -108,15 +129,28 @@ const App = () => {
       }
   }, [time])
   
+  useEffect(() => {
+    fetch(ROOT_URL+"/credential")
+    .then(res => res.json())
+    .then((result) => {
+        setCredential(result)
+    })
+  }, []);
+  
   return (
     <div className="container">
       <h1>prom2lyrid configuration page</h1>
       <div className="flex-row">
-        
+        <div className="flex-large">
+            <h2>Lyrid key and secret</h2>
+            <CredentialForm updateCredential={updateCredential} credential={credential} />
+        </div>
+      </div>
+      <div className="flex-row">
         <div className="flex-large">
           {editing ? (
             <div>
-              <h2>Edit endpoint</h2>
+              <h2>Edit endpoint lables</h2>
               <EditEndpointForm
                 setEditing={setEditing}
                 currentEndpoint={currentEndpoint}
