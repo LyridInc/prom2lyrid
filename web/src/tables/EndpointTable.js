@@ -20,7 +20,9 @@ const EndpointTable = (props) => (
           <tr key={endpoint.id}>
             <td>{endpoint.id}</td>
             <td><a target="_blank" href={endpoint.url}>{endpoint.url}</a></td>
-            <td>{endpoint.status}</td>
+            <td>{endpoint.status}<br/>
+                <small>{endpoint.message}</small>
+            </td>
             <td>{endpoint.config.scrape_interval}</td>
             <td>{endpoint.config.scrape_timeout}</td>
             <td>{endpoint.last_scrape}</td>
@@ -34,6 +36,23 @@ const EndpointTable = (props) => (
               >
                 Edit
               </button>
+              {(endpoint.status == "Error" || endpoint.status == "Stopped")? (
+                  <button
+                    onClick={() => {
+                      props.restartEndpoint(endpoint.id)
+                    }}
+                    className="button muted-button"
+                  >
+                  Restart
+                  </button>
+              ) : (<button
+                    onClick={() => {
+                      props.stopEndpoint(endpoint.id)
+                    }}
+                    className="button muted-button"
+                  >
+                  Stop
+                  </button>)}
               <button
                 onClick={() => props.deleteEndpoint(endpoint.id)}
                 className="button muted-button"

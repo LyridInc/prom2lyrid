@@ -1014,6 +1014,15 @@ caption {
   overflow-x: auto;
 }
 
+.additional-label input{
+    display: inline;
+    width: 40%;
+}
+
+.additional-label .label-key{
+
+}
+
 @media (min-width: 600px) {
   .contain-table {
     width: 100%;

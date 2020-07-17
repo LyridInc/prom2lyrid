@@ -65,10 +65,13 @@ func main() {
 		endpoints.POST("/add", api.AddEndpoints)
 		endpoints.POST("/update/:id/labels", api.UpdateEndpointLabel)
 		endpoints.DELETE("/delete/:id", api.DeleteEndpoint)
+		endpoints.GET("/stop/:id", api.StopEndpoint)
+		endpoints.GET("/restart/:id", api.RestartEndpoint)
 		//endpoints.POST("/get/:id", api.AddEndpoints)
 		endpoints.GET("/scrape/:id", api.ScrapeResult)
 	}
-
+	router.GET("/credential", api.GetCredential)
+	router.POST("/credential", api.SetCredential)
 	router.Use(static.Serve("/docs", static.LocalFile("./docs", true)))
 	url := ginSwagger.URL(os.Getenv("SWAGGER_ROOT_URL") + "/docs/swagger.json")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
