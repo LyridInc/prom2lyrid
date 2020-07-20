@@ -5,9 +5,9 @@ import EditEndpointForm from './forms/EditEndpointForm'
 import CredentialForm from './forms/CredentialForm'
 
 const App = () => {
-
   const endpointsData = []
-  const ROOT_URL = 'http://localhost:8081'
+  //const ROOT_URL = 'http://localhost:8081'
+  const ROOT_URL = '';
   const [time, setTime] = useState(Date.now())
   const [endpoints, setEndpoints] = useState(endpointsData)
   const [credential, setCredential] = useState({key: '', secret: ''})
@@ -166,7 +166,14 @@ const App = () => {
         </div>
         
         <div className="flex-large">
-          <h2>List endpoints</h2>
+          <h2>List endpoints 
+            <button
+              onClick={() => setTime(Date.now())}
+              className="button muted-button"
+            >
+              Refresh
+            </button>
+          </h2>
           <EndpointTable endpoints={endpoints} editRow={editRow} deleteEndpoint={deleteEndpoint} restartEndpoint={restartEndpoint} stopEndpoint={stopEndpoint}/>
         </div>
       </div>
