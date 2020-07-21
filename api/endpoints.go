@@ -77,13 +77,12 @@ func RestartEndpoint(c *gin.Context) {
 	mgr := manager.GetInstance()
 	id := c.Param("id")
 	endpoint := mgr.Node.Endpoints[id]
-
 	if endpoint == nil {
 		c.JSON(404, "endpoint not found")
 		return
 	}
 	endpoint.Status = "Starting"
-	endpoint.Run(context.Background())
+	go endpoint.Run(context.Background())
 	mgr.WriteConfig()
 	c.JSON(200, endpoint)
 }
