@@ -38,3 +38,13 @@ func SetCredential(c *gin.Context) {
 		c.JSON(400, err)
 	}
 }
+
+func CheckLyridConnection(c *gin.Context) {
+	credential, _ := model.GetCredential()
+	if (len(credential.Key) > 0 && len(credential.Secret) > 0) {
+		// TODO Call SDK to check connection status ...
+		c.JSON(200, map[string]string{"status":"OK"})
+	} else {
+		c.JSON(200, map[string]string{"status":"ERROR"})
+	}
+}

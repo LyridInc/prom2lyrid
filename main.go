@@ -72,6 +72,7 @@ func main() {
 	}
 	router.GET("/credential", api.GetCredential)
 	router.POST("/credential", api.SetCredential)
+	router.GET("/credential/status", api.CheckLyridConnection)
 	router.Use(static.Serve("/docs", static.LocalFile("./docs", true)))
 	url := ginSwagger.URL(os.Getenv("SWAGGER_ROOT_URL") + "/docs/swagger.json")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))

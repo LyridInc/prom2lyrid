@@ -15,6 +15,8 @@ const App = () => {
   const initialFormState = { id: null, url: '', additional_labels: [] }
   const [currentEndpoint, setCurrentEndpoint] = useState(initialFormState)
   
+  const [lyridConnection, setLyridConnection] = useState({"status":"ERROR"})
+  
   const editRow = (endpoint) => {
     setEditing(true)
     let tags = []
@@ -108,6 +110,7 @@ const App = () => {
   
   useEffect(() => {
     const interval = setInterval(() => setTime(Date.now()), 60000)
+    
     fetch(ROOT_URL+"/endpoints/list")
     .then(res => res.json())
     .then(
@@ -124,6 +127,13 @@ const App = () => {
         console.log(error)
       }
     )
+    
+    fetch(ROOT_URL+"/credential/status")
+    .then(res => res.json())
+    .then((result) => {
+        setLyridConnection(result)
+    })
+    
     return () => {
         clearInterval(interval);
       }
@@ -143,6 +153,7 @@ const App = () => {
       <div className="flex-row">
         <div className="flex-large">
             <h2>Lyrid key and secret</h2>
+            <small> Connection status: {lyridConnection.status}</small>
             <CredentialForm updateCredential={updateCredential} credential={credential} />
         </div>
       </div>
