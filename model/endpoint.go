@@ -37,6 +37,7 @@ type ExporterEndpoint struct {
 
 	DurationSinceLastUpdate time.Duration
 	LastUpdateTime          time.Time
+	LastScrapeDuration		time.Duration
 
 	mux    sync.Mutex
 	Result []*dto.MetricFamily `json:"-"`
@@ -108,13 +109,16 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 			log.Println("Running endpoint: " + endpoint.URL)
 			start := time.Now()
 			result, err := endpoint.Scrape()
-			endpoint.Result = result
-			log.Println("Endpoint ", endpoint.URL, " took (ms): ", time.Now().Sub(start).Milliseconds())
+			scrapDuration := time.Now().Sub(start)
 			if err == nil {
 				endpoint.SetUpdate(true)
 				endpoint.Status = "Running"
 				endpoint.Message = ""
+				endpoint.LastScrapeDuration = scrapDuration
+				endpoint.Result = result
+				log.Println("Endpoint ", endpoint.URL, " took (ms): ", scrapDuration.Milliseconds())
 			} else {
+				log.Println("Error on scrape endpoint ", endpoint.URL)
 				if endpoint.Status == "Warning" {
 					// check how long has it been since the last successful scrape
 					// if it is more than the timeout, then set to error and stop scraping
@@ -143,7 +147,6 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 func (endpoint *ExporterEndpoint) Stop() {
 	// Send signal to stop
 	endpoint.Status = "Stopped"
-	endpoint.Message = ""
 	defer endpoint.cancel()
 	// Then wait
 }

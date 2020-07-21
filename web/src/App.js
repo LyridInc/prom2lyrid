@@ -5,15 +5,17 @@ import EditEndpointForm from './forms/EditEndpointForm'
 import CredentialForm from './forms/CredentialForm'
 
 const App = () => {
-
   const endpointsData = []
-  const ROOT_URL = 'http://localhost:8081'
+  //const ROOT_URL = 'http://localhost:8081'
+  const ROOT_URL = '';
   const [time, setTime] = useState(Date.now())
   const [endpoints, setEndpoints] = useState(endpointsData)
   const [credential, setCredential] = useState({key: '', secret: ''})
   const [editing, setEditing] = useState(false)
   const initialFormState = { id: null, url: '', additional_labels: [] }
   const [currentEndpoint, setCurrentEndpoint] = useState(initialFormState)
+  
+  const [lyridConnection, setLyridConnection] = useState({"status":"ERROR"})
   
   const editRow = (endpoint) => {
     setEditing(true)
@@ -108,6 +110,7 @@ const App = () => {
   
   useEffect(() => {
     const interval = setInterval(() => setTime(Date.now()), 60000)
+    
     fetch(ROOT_URL+"/endpoints/list")
     .then(res => res.json())
     .then(
@@ -124,6 +127,13 @@ const App = () => {
         console.log(error)
       }
     )
+    
+    fetch(ROOT_URL+"/credential/status")
+    .then(res => res.json())
+    .then((result) => {
+        setLyridConnection(result)
+    })
+    
     return () => {
         clearInterval(interval);
       }
@@ -143,6 +153,7 @@ const App = () => {
       <div className="flex-row">
         <div className="flex-large">
             <h2>Lyrid key and secret</h2>
+            <small> Connection status: {lyridConnection.status}</small>
             <CredentialForm updateCredential={updateCredential} credential={credential} />
         </div>
       </div>
@@ -166,7 +177,14 @@ const App = () => {
         </div>
         
         <div className="flex-large">
-          <h2>List endpoints</h2>
+          <h2>List endpoints 
+            <button
+              onClick={() => setTime(Date.now())}
+              className="button muted-button"
+            >
+              Refresh
+            </button>
+          </h2>
           <EndpointTable endpoints={endpoints} editRow={editRow} deleteEndpoint={deleteEndpoint} restartEndpoint={restartEndpoint} stopEndpoint={stopEndpoint}/>
         </div>
       </div>
