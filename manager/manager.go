@@ -46,6 +46,8 @@ func (manager *NodeManager) Init() {
 		// file does not exist
 		log.Println("Config file not found, generating a new one")
 		nodeconfig.ID = uuid.New().String()
+		nodeconfig.IsLocal = true
+		nodeconfig.ServerlessUrl = "http://localhost:8080"
 	} else {
 		log.Println("Config file found, loading")
 		byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -141,8 +143,9 @@ func (manager *NodeManager) Upload() {
 		if endpoint.IsUpdated {
 
 			// todo: Change to lyrid-sdk later
+			//if (manager.Node.IsLocal) { }
 
-			url := "http://localhost:8080"
+			url := manager.Node.ServerlessUrl
 
 			request := make(map[string]interface{})
 			request["Command"] = "UpdateScrapeResult"
