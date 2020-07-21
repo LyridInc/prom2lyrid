@@ -12,6 +12,8 @@ const App = () => {
   const [endpoints, setEndpoints] = useState(endpointsData)
   const [credential, setCredential] = useState({key: '', secret: ''})
   const [editing, setEditing] = useState(false)
+  const [isLocal, setLocal] = useState(true)
+  const [serverlessUrl, setServerlessUrl] = useState("http://localhost:8080")
   const initialFormState = { id: null, url: '', additional_labels: [] }
   const [currentEndpoint, setCurrentEndpoint] = useState(initialFormState)
   
@@ -71,7 +73,7 @@ const App = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credential)
     };
-    fetch(ROOT_URL+'/credential', requestOptions)
+    fetch(ROOT_URL+'/config/credential', requestOptions)
     .then(res => res.json())
     .then(
       (result) => {
@@ -108,6 +110,34 @@ const App = () => {
     })
   }
   
+  const toggleLocal = () => {
+    setLocal(!isLocal)
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({is_local: !isLocal})
+    };
+    fetch(ROOT_URL+"/config/local", requestOptions)
+    .then(res => res.json())
+    .then((result) => {
+        //setServerless(result)
+    }) 
+  }
+  
+  const postServerlessUrl = (target) => {
+    setServerlessUrl(target.value)
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({url: target.value})
+    };
+    fetch(ROOT_URL+"/config/serverless", requestOptions)
+    .then(res => res.json())
+    .then((result) => {
+        //setServerless(result)
+    })
+  }
+  
   useEffect(() => {
     const interval = setInterval(() => setTime(Date.now()), 60000)
     
@@ -128,7 +158,7 @@ const App = () => {
       }
     )
     
-    fetch(ROOT_URL+"/credential/status")
+    fetch(ROOT_URL+"/config/credential/status")
     .then(res => res.json())
     .then((result) => {
         setLyridConnection(result)
@@ -140,10 +170,22 @@ const App = () => {
   }, [time])
   
   useEffect(() => {
-    fetch(ROOT_URL+"/credential")
+    fetch(ROOT_URL+"/config/credential")
     .then(res => res.json())
     .then((result) => {
         setCredential(result)
+    })
+    
+    fetch(ROOT_URL+"/config/local")
+    .then(res => res.json())
+    .then((result) => {
+        setLocal(result)
+    })
+    
+    fetch(ROOT_URL+"/config/serverless")
+    .then(res => res.json())
+    .then((result) => {
+        setServerlessUrl(result)
     })
   }, []);
   
@@ -152,9 +194,26 @@ const App = () => {
       <h1>prom2lyrid configuration page</h1>
       <div className="flex-row">
         <div className="flex-large">
+          <label className="switch">
+            <input type="checkbox" checked={isLocal} onChange={toggleLocal} />
+            <div className="slider"></div>
+          </label>
+        </div>
+      </div>
+      <div className="flex-row">
+        <div className="flex-large">
+            { !isLocal ? (
+            <div>
             <h2>Lyrid key and secret</h2>
             <small> Connection status: {lyridConnection.status}</small>
             <CredentialForm updateCredential={updateCredential} credential={credential} />
+            </div>
+            ) : (
+            <div>
+            <h2>Local URL</h2>
+            <input type="text" name="url" value={serverlessUrl} onChange={postServerlessUrl}/>
+            </div>
+            )}
         </div>
       </div>
       <div className="flex-row">

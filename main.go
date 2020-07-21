@@ -70,9 +70,16 @@ func main() {
 		//endpoints.POST("/get/:id", api.AddEndpoints)
 		endpoints.GET("/scrape/:id", api.ScrapeResult)
 	}
-	router.GET("/credential", api.GetCredential)
-	router.POST("/credential", api.SetCredential)
-	router.GET("/credential/status", api.CheckLyridConnection)
+	configuration := router.Group("/config")
+	{
+		configuration.GET("/credential", api.GetCredential)
+		configuration.POST("/credential", api.SetCredential)
+		configuration.GET("/credential/status", api.CheckLyridConnection)
+		configuration.GET("/serverless", api.GetServerlessUrl)
+		configuration.POST("/serverless", api.SetServerlessUrl)
+		configuration.GET("/local", api.GetIsLocal)
+		configuration.POST("/local", api.SetIsLocal)
+	}
 	router.Use(static.Serve("/docs", static.LocalFile("./docs", true)))
 	url := ginSwagger.URL(os.Getenv("SWAGGER_ROOT_URL") + "/docs/swagger.json")
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
