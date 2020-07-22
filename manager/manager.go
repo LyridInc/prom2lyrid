@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/LyridInc/go-sdk"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
@@ -74,6 +75,8 @@ func (manager *NodeManager) Init() {
 		value.SetUpdate(false)
 		go value.Run(context.Background())
 	}
+
+	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
 }
 
 func (manager *NodeManager) dumpresult() []interface{} {

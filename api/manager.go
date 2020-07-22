@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/LyridInc/go-sdk"
 	"github.com/gin-gonic/gin"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
@@ -26,12 +27,17 @@ func SetCredential(c *gin.Context) {
 	var request map[string]string
 	if err := c.ShouldBindJSON(&request); err == nil {
 		credential := model.Credential{}
-		credential.Key =  request["key"]
-		credential.Secret =  request["secret"]
-		mgr := manager.GetInstance()
-		mgr.Node.Credential = credential
-		mgr.WriteConfig()
-		c.JSON(200, credential)
+		credential.Key = request["key"]
+		credential.Secret = request["secret"]
+		err = sdk.GetInstance().Initialize(credential.Key, credential.Secret)
+		if err == nil {
+			mgr := manager.GetInstance()
+			mgr.Node.Credential = credential
+			mgr.WriteConfig()
+			c.JSON(200, credential)
+		} else {
+			c.JSON(400, err)
+		}
 	} else {
 		c.JSON(400, err)
 	}
@@ -39,11 +45,17 @@ func SetCredential(c *gin.Context) {
 
 func CheckLyridConnection(c *gin.Context) {
 	credential := manager.GetInstance().Node.Credential
-	if (len(credential.Key) > 0 && len(credential.Secret) > 0) {
+	if len(credential.Key) > 0 && len(credential.Secret) > 0 {
 		// TODO Call SDK to check connection status ...
-		c.JSON(200, map[string]string{"status":"OK"})
+		user := sdk.GetInstance().GetUserProfile()
+		if user != nil {
+			account := sdk.GetInstance().GetAccountProfile()
+			c.JSON(200, account)
+		} else {
+			c.JSON(200, map[string]string{"status": "OK"})
+		}
 	} else {
-		c.JSON(200, map[string]string{"status":"ERROR"})
+		c.JSON(200, map[string]string{"status": "ERROR"})
 	}
 }
 
