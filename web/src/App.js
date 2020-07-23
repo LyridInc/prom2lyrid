@@ -17,7 +17,7 @@ const App = () => {
   const initialFormState = { id: null, url: '', additional_labels: [] }
   const [currentEndpoint, setCurrentEndpoint] = useState(initialFormState)
   
-  const [lyridConnection, setLyridConnection] = useState({"status":"ERROR"})
+  const [lyridConnection, setLyridConnection] = useState({"status":"Checking Lyrid account ..."})
   
   const editRow = (endpoint) => {
     setEditing(true)
@@ -35,7 +35,9 @@ const App = () => {
         body: JSON.stringify(updatedEndpoint)
     };
     fetch(ROOT_URL+'/endpoints/update/'+id+'/labels', requestOptions)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then(
       (result) => {
         //console.log(result)
@@ -55,7 +57,9 @@ const App = () => {
         body: JSON.stringify(endpoint)
     };
     fetch(ROOT_URL+'/endpoints/add', requestOptions)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then(
       (result) => {
         console.log(result)
@@ -74,11 +78,15 @@ const App = () => {
         body: JSON.stringify(credential)
     };
     fetch(ROOT_URL+'/config/credential', requestOptions)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then(
       (result) => {
         console.log(result)
         setCredential(result)
+        setLyridConnection({"status":"Checking Lyrid account ..."})
+        checkLyridConnection()
       },
       (error) => {
         console.log(error)
@@ -96,7 +104,9 @@ const App = () => {
   
   const restartEndpoint = (id) => {
     fetch(ROOT_URL+"/endpoints/restart/"+id)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         setEndpoints(endpoints.map((endpoint) => (endpoint.id === id ? result : endpoint)))
     })
@@ -104,7 +114,9 @@ const App = () => {
   
   const stopEndpoint = (id) => {
     fetch(ROOT_URL+"/endpoints/stop/"+id)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         setEndpoints(endpoints.map((endpoint) => (endpoint.id === id ? result : endpoint)))
     })
@@ -118,7 +130,9 @@ const App = () => {
         body: JSON.stringify({is_local: !isLocal})
     };
     fetch(ROOT_URL+"/config/local", requestOptions)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         //setServerless(result)
     }) 
@@ -132,9 +146,21 @@ const App = () => {
         body: JSON.stringify({url: target.value})
     };
     fetch(ROOT_URL+"/config/serverless", requestOptions)
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         //setServerless(result)
+    })
+  }
+  
+  const checkLyridConnection = () => {
+    fetch(ROOT_URL+"/config/credential/status")
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
+    .then((result) => {
+        setLyridConnection({status: "Connected to Lyrid under accout name " + result[0].name + "."})
     })
   }
   
@@ -142,7 +168,9 @@ const App = () => {
     const interval = setInterval(() => setTime(Date.now()), 60000)
     
     fetch(ROOT_URL+"/endpoints/list")
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then(
       (result) => {
         //console.log(result)
@@ -158,11 +186,7 @@ const App = () => {
       }
     )
     
-    fetch(ROOT_URL+"/config/credential/status")
-    .then(res => res.json())
-    .then((result) => {
-        setLyridConnection(result)
-    })
+    checkLyridConnection()
     
     return () => {
         clearInterval(interval);
@@ -171,19 +195,25 @@ const App = () => {
   
   useEffect(() => {
     fetch(ROOT_URL+"/config/credential")
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         setCredential(result)
     })
     
     fetch(ROOT_URL+"/config/local")
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         setLocal(result)
     })
     
     fetch(ROOT_URL+"/config/serverless")
-    .then(res => res.json())
+    .then((res) => {
+        if(!res.ok) { throw new Error(res.status) } else {return res.json()}
+    })
     .then((result) => {
         setServerlessUrl(result)
     })
@@ -204,8 +234,8 @@ const App = () => {
         <div className="flex-large">
             { !isLocal ? (
             <div>
-            <h2>Lyrid key and secret</h2>
-            <small> Connection status: {lyridConnection.status}</small>
+            <h2>Lyrid account</h2>
+            <small>{lyridConnection.status}</small>
             <CredentialForm updateCredential={updateCredential} credential={credential} />
             </div>
             ) : (
