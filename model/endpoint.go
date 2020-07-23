@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+// exporter type list:
+// windows
+// node
+// mongo
+// unknown
+
 // Endpoint Status Enums:
 // Starting
 // Started
@@ -21,9 +27,10 @@ import (
 //
 
 type ExporterEndpoint struct {
-	ID     string       `json:"id"`
-	URL    string       `json:"url"`
-	Config ScrapeConfig `json:"config"`
+	ID           string       `json:"id"`
+	URL          string       `json:"url"`
+	Config       ScrapeConfig `json:"config"`
+	ExporterType string       `json:"type"`
 
 	Status           string            `json:"status"`
 	LastScrape       time.Time         `json:"last_scrape"`
@@ -37,21 +44,22 @@ type ExporterEndpoint struct {
 
 	DurationSinceLastUpdate time.Duration
 	LastUpdateTime          time.Time
-	LastScrapeDuration		time.Duration
+	LastScrapeDuration      time.Duration
 
 	mux    sync.Mutex
 	Result []*dto.MetricFamily `json:"-"`
-	ctx context.Context
+	ctx    context.Context
 	cancel context.CancelFunc
 }
 
 func CreateEndpoint(url string) ExporterEndpoint {
 	return ExporterEndpoint{
-		ID:     uuid.New().String(),
-		URL:    url,
-		Config: CreateDefaultScrapeConfig(),
+		ID:               uuid.New().String(),
+		URL:              url,
+		Config:           CreateDefaultScrapeConfig(),
+		ExporterType:     "unknown",
 		AdditionalLabels: map[string]string{"id": uuid.New().String()},
-		Status: "Starting",
+		Status:           "Starting",
 	}
 }
 
@@ -125,7 +133,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 					// if it is more than the timeout, then set to error and stop scraping
 					//endpoint.Status = "Error"
 					dur, _ := time.ParseDuration(endpoint.Config.ScrapeTimeout)
-					if (time.Since(endpoint.LastUpdateTime) > dur) {
+					if time.Since(endpoint.LastUpdateTime) > dur {
 						endpoint.Status = "Error"
 						endpoint.Message = "Fail to scrape endpoint."
 						endpoint.Stop()

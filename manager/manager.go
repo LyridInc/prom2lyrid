@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"prom2lyrid/model"
+	"prom2lyrid/utils"
 	"sync"
 	"time"
 )
@@ -107,6 +108,8 @@ func (manager *NodeManager) Run(ctx context.Context) {
 			manager.mux.Unlock()
 			// check every n-seconds for all the metrics that is collected and updated, dump it together to lyrid serverless
 			//
+			response, _ := sdk.GetInstance().ExecuteFunction("4e5d76aa-d73a-4c2c-a03d-dc7b4d915356", "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "ListExporter"}))
+			log.Println(string(response))
 
 			log.Println("Uploading scrapes to gateway: ")
 			manager.Upload()
