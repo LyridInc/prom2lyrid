@@ -150,7 +150,7 @@ func (manager *NodeManager) Upload() {
 			scrapeResult := make(map[string]interface{})
 			scrapeResult["ExporterID"] = endpoint.ID
 			result, _ := json.Marshal(endpoint.Result)
-			scrapeResult["ScrapeResult"] = string(result)
+			scrapeResult["ScrapeResult"] = json.RawMessage(result)
 			scrapeResult["ScrapeTime"] = endpoint.LastUpdateTime.UTC()
 			if (manager.Node.IsLocal) {
 				//sdk.GetInstance().ExecuteFunction("","","")

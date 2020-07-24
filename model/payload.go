@@ -1,6 +1,9 @@
 package model
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type LyFnInputParams struct {
 	Command string
@@ -18,7 +21,7 @@ type LyFnOutputParams struct {
 
 type ScrapesEndpointResult struct {
 	ExporterID   string
-	ScrapeResult string
+	ScrapeResult json.RawMessage
 
 	ScrapeTime     time.Time
 	LastUpdateTime time.Time
