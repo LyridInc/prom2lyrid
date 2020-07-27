@@ -1,15 +1,12 @@
 package manager
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/LyridInc/go-sdk"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"prom2lyrid/model"
 	"prom2lyrid/utils"
@@ -59,7 +56,11 @@ func (manager *NodeManager) Init() {
 	if nodeconfig.Endpoints == nil {
 		nodeconfig.Endpoints = make(map[string]*model.ExporterEndpoint)
 	}
-
+	if manager.Node.IsLocal {
+		sdk.GetInstance().SimulateServerless(manager.Node.ServerlessUrl)
+	} else {
+		sdk.GetInstance().DisableSimulate()
+	}
 	jsonFile.Close()
 
 	manager.Node = nodeconfig
@@ -147,61 +148,11 @@ func (manager *NodeManager) WriteConfig() {
 func (manager *NodeManager) Upload() {
 	for _, endpoint := range manager.Node.Endpoints {
 		if endpoint.IsUpdated {
-			scrapeResult := make(map[string]interface{})
-			scrapeResult["ExporterID"] = endpoint.ID
+			log.Println("UpdateScrapeResult for endpoint: ", endpoint.URL)
 			result, _ := json.Marshal(endpoint.Result)
-			scrapeResult["ScrapeResult"] = json.RawMessage(result)
-			scrapeResult["ScrapeTime"] = endpoint.LastUpdateTime.UTC()
-			if (manager.Node.IsLocal) {
-				//sdk.GetInstance().ExecuteFunction("","","")
-
-				url := manager.Node.ServerlessUrl
-
-				request := make(map[string]interface{})
-				request["Command"] = "UpdateScrapeResult"
-				request["ScapeResult"] = scrapeResult
-
-				jsonreq, _ := json.Marshal(request)
-				fmt.Println()
-				req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonreq))
-				req.Header.Add("content-type", "application/json")
-				response, err := http.DefaultClient.Do(req)
-				if err != nil {
-					return
-				}
-
-				body, _ := ioutil.ReadAll(response.Body)
-				defer response.Body.Close()
-
-				fmt.Println(string(body))
-			} else {
-				log.Println("UpdateScrapeResult for endpoint: ", endpoint.URL)
-				jsonbody, _ := json.Marshal(scrapeResult)
-				scrapeEndpointResult := model.ScrapesEndpointResult{}
-				json.Unmarshal(jsonbody, &scrapeEndpointResult)
-				response, _ := sdk.GetInstance().ExecuteFunction("2054f61c-2d57-489f-a172-79fc15c6c20c", "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint ,ScapeResult: scrapeEndpointResult}))
-				log.Println("response: ",string(response))
-			}
-			/*
-				var grant_json = "{\"grant_type\":\"client_credentials\"," +
-					"\"client_id\": \"" + os.Getenv("AUTH0_CLIENTID") + "\"," +
-					"\"client_secret\": \"" + os.Getenv("AUTH0_CLIENTSECRET") + "\"," +
-					"\"audience\": \"https://" + os.Getenv("AUTH0_DOMAIN") + "/api/v2/\"}"
-
-				req, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer([]byte(grant_json)))
-				req.Header.Add("content-type", "application/json")
-				response, err := http.DefaultClient.Do(req)
-				if err != nil {
-					sentry.CaptureException(err)
-					return "", err
-				}
-
-				body, _ := ioutil.ReadAll(response.Body)
-				defer response.Body.Close()
-
-				var tokenjson map[string]interface{}
-				json.Unmarshal(body, &tokenjson)
-			*/
+			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID:endpoint.ID, ScrapeResult: string(result), ScrapeTime:endpoint.LastUpdateTime.UTC()}
+			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint ,ScapeResult: scrapeEndpointResult}))
+			log.Println("response: ",string(response))
 		}
 	}
 }
