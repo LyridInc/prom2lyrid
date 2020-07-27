@@ -72,13 +72,12 @@ func (manager *NodeManager) Init() {
 	manager.Node.HostName = name
 	manager.ResultCache = make(map[string]interface{})
 	manager.WriteConfig()
-
+	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
 	for _, value := range manager.Node.Endpoints {
 		value.SetUpdate(false)
+		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value}))
 		go value.Run(context.Background())
 	}
-
-	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
 }
 
 func (manager *NodeManager) dumpresult() []interface{} {

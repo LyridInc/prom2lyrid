@@ -2,9 +2,12 @@ package api
 
 import (
 	"context"
+	"github.com/LyridInc/go-sdk"
 	"github.com/gin-gonic/gin"
+	"os"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
+	"prom2lyrid/utils"
 )
 
 //
@@ -38,6 +41,7 @@ func AddEndpoints(c *gin.Context) {
 		mgr := manager.GetInstance()
 		mgr.Node.AddEndpoint(endpoint)
 		mgr.WriteConfig()
+		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: endpoint}))
 		c.JSON(200, endpoint)
 	} else {
 		c.JSON(400, err)
