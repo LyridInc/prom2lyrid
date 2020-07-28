@@ -1,15 +1,12 @@
 package manager
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/LyridInc/go-sdk"
 	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"prom2lyrid/model"
 	"prom2lyrid/utils"
@@ -59,7 +56,11 @@ func (manager *NodeManager) Init() {
 	if nodeconfig.Endpoints == nil {
 		nodeconfig.Endpoints = make(map[string]*model.ExporterEndpoint)
 	}
-
+	if manager.Node.IsLocal {
+		sdk.GetInstance().SimulateServerless(manager.Node.ServerlessUrl)
+	} else {
+		sdk.GetInstance().DisableSimulate()
+	}
 	jsonFile.Close()
 
 	manager.Node = nodeconfig
@@ -71,13 +72,12 @@ func (manager *NodeManager) Init() {
 	manager.Node.HostName = name
 	manager.ResultCache = make(map[string]interface{})
 	manager.WriteConfig()
-
+	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
 	for _, value := range manager.Node.Endpoints {
 		value.SetUpdate(false)
+		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value}))
 		go value.Run(context.Background())
 	}
-
-	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
 }
 
 func (manager *NodeManager) dumpresult() []interface{} {
@@ -108,8 +108,8 @@ func (manager *NodeManager) Run(ctx context.Context) {
 			manager.mux.Unlock()
 			// check every n-seconds for all the metrics that is collected and updated, dump it together to lyrid serverless
 			//
-			response, _ := sdk.GetInstance().ExecuteFunction("4e5d76aa-d73a-4c2c-a03d-dc7b4d915356", "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "ListExporter"}))
-			log.Println(string(response))
+			//response, _ := sdk.GetInstance().ExecuteFunction("2054f61c-2d57-489f-a172-79fc15c6c20c", "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult"}))
+			//log.Println(string(response))
 
 			log.Println("Uploading scrapes to gateway: ")
 			manager.Upload()
@@ -147,54 +147,11 @@ func (manager *NodeManager) WriteConfig() {
 func (manager *NodeManager) Upload() {
 	for _, endpoint := range manager.Node.Endpoints {
 		if endpoint.IsUpdated {
-
-			// todo: Change to lyrid-sdk later
-			//if (manager.Node.IsLocal) { }
-
-			url := manager.Node.ServerlessUrl
-
-			request := make(map[string]interface{})
-			request["Command"] = "UpdateScrapeResult"
-			scrapeResult := make(map[string]interface{})
-			scrapeResult["ExporterID"] = endpoint.ID
+			log.Println("UpdateScrapeResult for endpoint: ", endpoint.URL)
 			result, _ := json.Marshal(endpoint.Result)
-			scrapeResult["ScrapeResult"] = string(result)
-			scrapeResult["ScrapeTime"] = endpoint.LastUpdateTime.UTC()
-			request["ScapeResult"] = scrapeResult
-
-			jsonreq, _ := json.Marshal(request)
-			fmt.Println()
-			req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonreq))
-			req.Header.Add("content-type", "application/json")
-			response, err := http.DefaultClient.Do(req)
-			if err != nil {
-				return
-			}
-
-			body, _ := ioutil.ReadAll(response.Body)
-			defer response.Body.Close()
-
-			fmt.Println(string(body))
-			/*
-				var grant_json = "{\"grant_type\":\"client_credentials\"," +
-					"\"client_id\": \"" + os.Getenv("AUTH0_CLIENTID") + "\"," +
-					"\"client_secret\": \"" + os.Getenv("AUTH0_CLIENTSECRET") + "\"," +
-					"\"audience\": \"https://" + os.Getenv("AUTH0_DOMAIN") + "/api/v2/\"}"
-
-				req, _ := http.NewRequest("POST", endpoint, bytes.NewBuffer([]byte(grant_json)))
-				req.Header.Add("content-type", "application/json")
-				response, err := http.DefaultClient.Do(req)
-				if err != nil {
-					sentry.CaptureException(err)
-					return "", err
-				}
-
-				body, _ := ioutil.ReadAll(response.Body)
-				defer response.Body.Close()
-
-				var tokenjson map[string]interface{}
-				json.Unmarshal(body, &tokenjson)
-			*/
+			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID:endpoint.ID, ScrapeResult: string(result), ScrapeTime:endpoint.LastUpdateTime.UTC()}
+			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint ,ScapeResult: scrapeEndpointResult}))
+			log.Println("response: ",string(response))
 		}
 	}
 }

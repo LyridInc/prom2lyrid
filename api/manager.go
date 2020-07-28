@@ -64,6 +64,11 @@ func SetIsLocal(c *gin.Context) {
 	if err := c.ShouldBindJSON(&request); err == nil {
 		isLocal, _ := request["is_local"]
 		manager.GetInstance().Node.IsLocal = isLocal
+		if manager.GetInstance().Node.IsLocal {
+			sdk.GetInstance().SimulateServerless(manager.GetInstance().Node.ServerlessUrl)
+		} else {
+			sdk.GetInstance().DisableSimulate()
+		}
 		manager.GetInstance().WriteConfig()
 		c.JSON(200, manager.GetInstance().Node.IsLocal)
 	} else {
@@ -83,6 +88,9 @@ func SetServerlessUrl(c *gin.Context) {
 	var request map[string]string
 	if err := c.ShouldBindJSON(&request); err == nil {
 		manager.GetInstance().Node.ServerlessUrl = request["url"]
+		if manager.GetInstance().Node.IsLocal {
+			sdk.GetInstance().SimulateServerless(manager.GetInstance().Node.ServerlessUrl)
+		}
 		manager.GetInstance().WriteConfig()
 		c.JSON(200, manager.GetInstance().Node.ServerlessUrl)
 	} else {
