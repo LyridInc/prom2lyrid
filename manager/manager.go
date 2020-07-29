@@ -73,7 +73,12 @@ func (manager *NodeManager) Init() {
 	manager.ResultCache = make(map[string]interface{})
 	manager.WriteConfig()
 	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
+	if manager.Node.IsLocal {
+		sdk.GetInstance().SimulateServerless(manager.Node.ServerlessUrl)
+	}
+	sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: manager.Node}))
 	for _, value := range manager.Node.Endpoints {
+		value.Gateway = manager.Node.ID
 		value.SetUpdate(false)
 		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value}))
 		go value.Run(context.Background())

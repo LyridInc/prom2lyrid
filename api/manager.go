@@ -3,8 +3,10 @@ package api
 import (
 	"github.com/LyridInc/go-sdk"
 	"github.com/gin-gonic/gin"
+	"os"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
+	"prom2lyrid/utils"
 )
 
 func Reload(c *gin.Context) {
@@ -34,6 +36,7 @@ func SetCredential(c *gin.Context) {
 			mgr := manager.GetInstance()
 			mgr.Node.Credential = credential
 			mgr.WriteConfig()
+			sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: mgr.Node}))
 			c.JSON(200, credential)
 		} else {
 			c.JSON(400, err)

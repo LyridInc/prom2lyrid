@@ -14,6 +14,7 @@ type Node struct {
 }
 
 func (n Node) AddEndpoint(e ExporterEndpoint) {
+	e.Gateway = n.ID
 	n.Endpoints[e.ID] = &e
 	go e.Run(context.Background())
 }
