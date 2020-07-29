@@ -3,7 +3,7 @@ module prom2lyrid
 go 1.14
 
 require (
-	github.com/LyridInc/go-sdk v0.0.0-20200723025356-d96222dbca01
+	github.com/LyridInc/go-sdk v0.0.0-20200723225018-126426f89392
 	github.com/chenjiandongx/ginprom v0.0.0-20191227144730-e11ebf56bc05
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-contrib/cors v1.3.1
@@ -22,7 +22,7 @@ require (
 	github.com/swaggo/swag v1.6.7 // indirect
 	github.com/urfave/cli/v2 v2.2.0 // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
+	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 	golang.org/x/tools v0.0.0-20200608174601-1b747fd94509 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
