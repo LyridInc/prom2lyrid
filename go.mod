@@ -3,7 +3,7 @@ module prom2lyrid
 go 1.14
 
 require (
-	github.com/LyridInc/go-sdk v0.0.0-20200723225018-126426f89392
+	github.com/LyridInc/go-sdk v0.0.0-20200730191805-8e687a5f9ee3
 	github.com/chenjiandongx/ginprom v0.0.0-20191227144730-e11ebf56bc05
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/gin-contrib/cors v1.3.1
