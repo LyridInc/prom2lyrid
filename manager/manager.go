@@ -35,7 +35,7 @@ func GetInstance() *NodeManager {
 }
 
 func (manager *NodeManager) Init() {
-	manager.ConfigFile = os.Getenv("CONFIG_FILE")
+	manager.ConfigFile = os.Getenv("CONFIG_DIR")+"/config.json"
 	manager.isUploading = false
 	var nodeconfig model.Node
 
@@ -143,7 +143,7 @@ func (manager *NodeManager) WriteConfig() {
 
 	//encoder := json.NewEncoder(file)
 	//encoder.Encode(manager.Node)
-
+	_ = os.Mkdir(os.Getenv("CONFIG_DIR"), 0755)
 	f, _ := json.MarshalIndent(manager.Node, "", " ")
 	_ = ioutil.WriteFile(manager.ConfigFile, f, 0644)
 	manager.mux.Unlock()

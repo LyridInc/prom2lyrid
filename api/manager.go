@@ -49,7 +49,6 @@ func SetCredential(c *gin.Context) {
 func CheckLyridConnection(c *gin.Context) {
 	credential := manager.GetInstance().Node.Credential
 	if len(credential.Key) > 0 && len(credential.Secret) > 0 {
-		// TODO Call SDK to check connection status ...
 		user := sdk.GetInstance().GetUserProfile()
 		if user != nil {
 			account := sdk.GetInstance().GetAccountProfile()
