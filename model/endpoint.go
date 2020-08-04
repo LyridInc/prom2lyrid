@@ -28,9 +28,10 @@ import (
 
 type ExporterEndpoint struct {
 	ID           string       `json:"id"`
+	Gateway      string 	  `json:gateway`
 	URL          string       `json:"url"`
 	Config       ScrapeConfig `json:"config"`
-	ExporterType string       `json:"type"`
+	ExporterType string       `json:"exportertype"`
 
 	Status           string            `json:"status"`
 	LastScrape       time.Time         `json:"last_scrape"`

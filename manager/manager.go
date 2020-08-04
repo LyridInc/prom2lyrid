@@ -35,7 +35,7 @@ func GetInstance() *NodeManager {
 }
 
 func (manager *NodeManager) Init() {
-	manager.ConfigFile = os.Getenv("CONFIG_FILE")
+	manager.ConfigFile = os.Getenv("CONFIG_DIR")+"/config.json"
 	manager.isUploading = false
 	var nodeconfig model.Node
 
@@ -73,7 +73,12 @@ func (manager *NodeManager) Init() {
 	manager.ResultCache = make(map[string]interface{})
 	manager.WriteConfig()
 	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
+	if manager.Node.IsLocal {
+		sdk.GetInstance().SimulateServerless(manager.Node.ServerlessUrl)
+	}
+	sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: manager.Node}))
 	for _, value := range manager.Node.Endpoints {
+		value.Gateway = manager.Node.ID
 		value.SetUpdate(false)
 		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value}))
 		go value.Run(context.Background())
@@ -138,7 +143,7 @@ func (manager *NodeManager) WriteConfig() {
 
 	//encoder := json.NewEncoder(file)
 	//encoder.Encode(manager.Node)
-
+	_ = os.Mkdir(os.Getenv("CONFIG_DIR"), 0755)
 	f, _ := json.MarshalIndent(manager.Node, "", " ")
 	_ = ioutil.WriteFile(manager.ConfigFile, f, 0644)
 	manager.mux.Unlock()

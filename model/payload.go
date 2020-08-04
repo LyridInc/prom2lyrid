@@ -9,6 +9,7 @@ type LyFnInputParams struct {
 
 	Exporter    ExporterEndpoint
 	ScapeResult ScrapesEndpointResult
+	Gateway 	Node
 	Payload     RequestParam
 }
 
