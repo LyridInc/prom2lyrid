@@ -6,6 +6,7 @@ import (
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
 	"log"
+	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -28,7 +29,7 @@ import (
 
 type ExporterEndpoint struct {
 	ID           string       `json:"id"`
-	Gateway      string 	  `json:gateway`
+	Gateway      string       `json:gateway`
 	URL          string       `json:"url"`
 	Config       ScrapeConfig `json:"config"`
 	ExporterType string       `json:"exportertype"`
@@ -125,6 +126,21 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 				endpoint.Status = "Running"
 				endpoint.Message = ""
 				endpoint.LastScrapeDuration = scrapDuration
+
+				for _, metricfamily := range result {
+					for _, metric := range metricfamily.Metric {
+						if metric.Summary != nil {
+							for _, quantile := range metric.Summary.Quantile {
+								if quantile.Value != nil {
+									if math.IsNaN(*quantile.Value) || math.IsInf(*quantile.Value, 1) || math.IsInf(*quantile.Value, -1) {
+										quantile.Value = nil
+									}
+								}
+							}
+						}
+					}
+				}
+
 				endpoint.Result = result
 				log.Println("Endpoint ", endpoint.URL, " took (ms): ", scrapDuration.Milliseconds())
 			} else {

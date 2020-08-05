@@ -35,7 +35,7 @@ func GetInstance() *NodeManager {
 }
 
 func (manager *NodeManager) Init() {
-	manager.ConfigFile = os.Getenv("CONFIG_DIR")+"/config.json"
+	manager.ConfigFile = os.Getenv("CONFIG_DIR") + "/config.json"
 	manager.isUploading = false
 	var nodeconfig model.Node
 
@@ -153,10 +153,16 @@ func (manager *NodeManager) Upload() {
 	for _, endpoint := range manager.Node.Endpoints {
 		if endpoint.IsUpdated {
 			log.Println("UpdateScrapeResult for endpoint: ", endpoint.URL)
-			result, _ := json.Marshal(endpoint.Result)
-			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID:endpoint.ID, ScrapeResult: string(result), ScrapeTime:endpoint.LastUpdateTime.UTC()}
-			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint ,ScapeResult: scrapeEndpointResult}))
-			log.Println("response: ",string(response))
+			result, err := json.Marshal(endpoint.Result)
+
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID: endpoint.ID, ScrapeResult: string(result), ScrapeTime: endpoint.LastUpdateTime.UTC()}
+			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult}))
+			log.Println("response: ", string(response))
 		}
 	}
 }
