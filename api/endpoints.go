@@ -39,6 +39,7 @@ func AddEndpoints(c *gin.Context) {
 	if err := c.ShouldBindJSON(&request); err == nil {
 		endpoint := model.CreateEndpoint(request.URL)
 		mgr := manager.GetInstance()
+		endpoint.Gateway = mgr.Node.ID
 		mgr.Node.AddEndpoint(endpoint)
 		mgr.WriteConfig()
 		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: endpoint}))
@@ -103,6 +104,8 @@ func UpdateEndpointLabel(c *gin.Context) {
 	var request model.ExporterEndpoint
 	if err := c.ShouldBindJSON(&request); err == nil {
 		endpoint.AdditionalLabels = request.AdditionalLabels
+		endpoint.URL = request.URL
+		endpoint.Config = request.Config
 		mgr.WriteConfig()
 		c.JSON(200, endpoint)
 	} else {
