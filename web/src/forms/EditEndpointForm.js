@@ -21,13 +21,41 @@ const EditEndpointForm = (props) => {
     setEndpoint({ ...endpoint, "additional_labels": labels })
   }
   
+  const handleConfigChange = (event) => {
+    const { name, value } = event.target
+    setConfig({ ...config, [name]: value })
+  }
+  
   useEffect(() => {
     setEndpoint(props.currentEndpoint)
   }, [props])
   
   const [value, setValue] = useState(endpoint.additional_labels)
+  const [config, setConfig] = useState(endpoint.config)
   return (
     <div>
+      <label>Url</label>
+      <input
+        type="text"
+        name="url"
+        value={endpoint.url}
+        onChange={handleInputChange}
+      />
+      <label>Scrape interval</label>
+      <input
+        type="text"
+        name="scrape_interval"
+        value={config.scrape_interval}
+        onChange={handleConfigChange}
+      />
+      <label>Scrape timeout</label>
+      <input
+        type="text"
+        name="scrape_timeout"
+        value={config.scrape_timeout}
+        onChange={handleConfigChange}
+      />
+      <label>Labels</label>
       <ObjectInput
       obj={value}
       onChange={setValue}
@@ -59,6 +87,7 @@ const EditEndpointForm = (props) => {
       onSubmit={(event) => {
         event.preventDefault()
         handleLabelChange(value)
+        endpoint.config = config
         endpoint.additional_labels = value
         console.log(value)
         console.log(endpoint)

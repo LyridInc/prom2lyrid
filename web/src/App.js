@@ -14,7 +14,7 @@ const App = () => {
   const [editing, setEditing] = useState(false)
   const [isLocal, setLocal] = useState(true)
   const [serverlessUrl, setServerlessUrl] = useState("http://localhost:8080")
-  const initialFormState = { id: null, url: '', additional_labels: [] }
+  const initialFormState = { id: null, url: '', additional_labels: [], config: {scrape_interval: "1m", scrape_timeout: "10m"}}
   const [currentEndpoint, setCurrentEndpoint] = useState(initialFormState)
   
   const [lyridConnection, setLyridConnection] = useState({"status":"Checking Lyrid account ..."})
@@ -25,7 +25,7 @@ const App = () => {
     if (endpoint.additional_labels) {
       tags = endpoint.additional_labels
     }
-    setCurrentEndpoint({ id: endpoint.id, url: endpoint.url, additional_labels: tags })
+    setCurrentEndpoint({ id: endpoint.id, url: endpoint.url, additional_labels: tags, config: endpoint.config})
   }
   
   const updateEndpoint = (id, updatedEndpoint) => {
@@ -250,7 +250,7 @@ const App = () => {
         <div className="flex-large">
           {editing ? (
             <div>
-              <h2>Edit endpoint lables</h2>
+              <h2>Edit endpoint</h2>
               <EditEndpointForm
                 setEditing={setEditing}
                 currentEndpoint={currentEndpoint}
