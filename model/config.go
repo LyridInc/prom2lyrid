@@ -1,5 +1,7 @@
 package model
 
+import "os"
+
 type ScrapeConfig struct {
 	ScrapeInterval string `json:"scrape_interval"`
 	ScrapeTimeout  string `json:"scrape_timeout"`
@@ -7,8 +9,8 @@ type ScrapeConfig struct {
 
 func CreateDefaultScrapeConfig() ScrapeConfig {
 	return ScrapeConfig{
-		ScrapeInterval: "1m",
-		ScrapeTimeout:  "10m",
+		ScrapeInterval: os.Getenv("SCRAPE_INTERVAL"),
+		ScrapeTimeout:  os.Getenv("SCRAPE_TIMEOUT"),
 	}
 }
 
