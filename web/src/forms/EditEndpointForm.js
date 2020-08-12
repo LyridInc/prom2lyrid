@@ -26,6 +26,11 @@ const EditEndpointForm = (props) => {
     setConfig({ ...config, [name]: value })
   }
   
+  const toggleCompress = () => {
+    let is_complress = !endpoint.is_compress
+    setEndpoint({ ...endpoint, "is_compress": is_complress })
+  }
+  
   useEffect(() => {
     setEndpoint(props.currentEndpoint)
   }, [props])
@@ -55,6 +60,11 @@ const EditEndpointForm = (props) => {
         value={config.scrape_timeout}
         onChange={handleConfigChange}
       />
+      <label>Compress scrape result</label>
+      <label className="switch">
+        <input type="checkbox" checked={endpoint.is_compress} onChange={toggleCompress} />
+        <div className="slider"></div>
+      </label>
       <label>Labels</label>
       <ObjectInput
       obj={value}

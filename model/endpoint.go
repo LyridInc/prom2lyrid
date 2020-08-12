@@ -40,6 +40,7 @@ type ExporterEndpoint struct {
 
 	Message   string `json:"message"`
 	IsUpdated bool   `json:"is_updated"`
+	IsCompress bool  `json:"is_compress"`
 
 	//IsScraping bool `json:-`
 	//Stopping
@@ -62,6 +63,7 @@ func CreateEndpoint(url string) ExporterEndpoint {
 		ExporterType:     "unknown",
 		AdditionalLabels: map[string]string{"id": uuid.New().String()},
 		Status:           "Starting",
+		IsCompress:		  true,
 	}
 }
 

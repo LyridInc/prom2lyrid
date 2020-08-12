@@ -107,6 +107,7 @@ func UpdateEndpointLabel(c *gin.Context) {
 		endpoint.AdditionalLabels = request.AdditionalLabels
 		endpoint.URL = request.URL
 		endpoint.Config = request.Config
+		endpoint.IsCompress = request.IsCompress
 		mgr.WriteConfig()
 		//Restart to take effect
 		endpoint.Stop()
