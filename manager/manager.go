@@ -1,15 +1,20 @@
 package manager
 
 import (
+	"bytes"
 	"context"
+	b64 "encoding/base64"
 	"encoding/json"
 	"github.com/LyridInc/go-sdk"
 	"github.com/google/uuid"
+	"github.com/pierrec/lz4"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"prom2lyrid/model"
 	"prom2lyrid/utils"
+	"strings"
 	"sync"
 	"time"
 )
@@ -154,13 +159,20 @@ func (manager *NodeManager) Upload() {
 		if endpoint.IsUpdated {
 			log.Println("UpdateScrapeResult for endpoint: ", endpoint.URL)
 			result, err := json.Marshal(endpoint.Result)
-
+			scrapeResult := string(result)
+			if endpoint.IsCompress{
+				var writebuffer bytes.Buffer
+				w := lz4.NewWriter(&writebuffer)
+				io.Copy(w, strings.NewReader(string(result)))
+				w.Close()
+				scrapeResult = b64.StdEncoding.EncodeToString(writebuffer.Bytes())
+			}
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
-			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID: endpoint.ID, ScrapeResult: string(result), ScrapeTime: endpoint.LastUpdateTime.UTC()}
+			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID: endpoint.ID, ScrapeResult: scrapeResult, ScrapeTime: endpoint.LastUpdateTime.UTC(), IsCompress: endpoint.IsCompress}
 			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult}))
 			log.Println("response: ", string(response))
 		}

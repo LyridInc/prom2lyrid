@@ -42,6 +42,7 @@ func main() {
 	router := gin.Default()
 	router.Use(ginprom.PromMiddleware(nil))
 	config := cors.DefaultConfig()
+	
 	config.AllowAllOrigins = true
 	config.AddAllowHeaders("*")
 	router.Use(cors.New(config))

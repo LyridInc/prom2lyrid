@@ -61,6 +61,7 @@ func DeleteEndpoint(c *gin.Context) {
 	delete(mgr.Node.Endpoints, id)
 	endpoint.Stop()
 	mgr.WriteConfig()
+	sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "DeleteExporter", Exporter: *endpoint}))
 }
 
 func StopEndpoint(c *gin.Context) {
@@ -106,7 +107,12 @@ func UpdateEndpointLabel(c *gin.Context) {
 		endpoint.AdditionalLabels = request.AdditionalLabels
 		endpoint.URL = request.URL
 		endpoint.Config = request.Config
+		endpoint.IsCompress = request.IsCompress
 		mgr.WriteConfig()
+		//Restart to take effect
+		endpoint.Stop()
+		endpoint.Status = "Starting"
+		go endpoint.Run(context.Background())
 		c.JSON(200, endpoint)
 	} else {
 		c.JSON(400, err)
