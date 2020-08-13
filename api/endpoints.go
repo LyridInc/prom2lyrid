@@ -113,6 +113,7 @@ func UpdateEndpointLabel(c *gin.Context) {
 		endpoint.Stop()
 		endpoint.Status = "Starting"
 		go endpoint.Run(context.Background())
+		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateExporter", Exporter: *endpoint}))
 		c.JSON(200, endpoint)
 	} else {
 		c.JSON(400, err)

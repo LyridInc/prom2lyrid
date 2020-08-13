@@ -61,7 +61,7 @@ func CreateEndpoint(url string) ExporterEndpoint {
 		URL:              url,
 		Config:           CreateDefaultScrapeConfig(),
 		ExporterType:     "unknown",
-		AdditionalLabels: map[string]string{"id": uuid.New().String()},
+		AdditionalLabels: map[string]string{},
 		Status:           "Starting",
 		IsCompress:		  true,
 	}
