@@ -172,7 +172,12 @@ func (manager *NodeManager) Upload() {
 				return
 			}
 
-			scrapeEndpointResult := model.ScrapesEndpointResult{ExporterID: endpoint.ID, ScrapeResult: scrapeResult, ScrapeTime: endpoint.LastUpdateTime.UTC(), IsCompress: endpoint.IsCompress}
+			scrapeEndpointResult := model.ScrapesEndpointResult{
+				ExporterID: endpoint.ID,
+				ScrapeResult: scrapeResult,
+				ScrapeTime: endpoint.LastUpdateTime.UTC(),
+				IsCompress: endpoint.IsCompress,
+			}
 			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult}))
 			log.Println("response: ", string(response))
 		}
