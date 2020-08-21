@@ -2,12 +2,14 @@ package model
 
 import (
 	"context"
+	"github.com/go-kit/kit/log/level"
 	"github.com/google/uuid"
 	dto "github.com/prometheus/client_model/go"
 	"github.com/prometheus/prom2json"
 	"log"
 	"math"
 	"net/http"
+	"prom2lyrid/logger"
 	"sync"
 	"time"
 )
@@ -119,7 +121,7 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 		if endpoint.Status == "Error" {
 			// do not scrape
 		} else {
-			log.Println("Running endpoint: " + endpoint.URL)
+			level.Info(logger.GetInstance().Logger).Log("Message", "Running endpoint", "Endpoint",  endpoint.URL)
 			start := time.Now()
 			result, err := endpoint.Scrape()
 			scrapDuration := time.Now().Sub(start)
@@ -144,9 +146,9 @@ func (endpoint *ExporterEndpoint) Run(ctx context.Context) {
 				}
 
 				endpoint.Result = result
-				log.Println("Endpoint ", endpoint.URL, " took (ms): ", scrapDuration.Milliseconds())
+				level.Info(logger.GetInstance().Logger).Log("Endpoint",  endpoint.URL, "ScrapeTime(ms)", scrapDuration.Milliseconds())
 			} else {
-				log.Println("Error on scrape endpoint ", endpoint.URL)
+				level.Error(logger.GetInstance().Logger).Log("Message",  "Error on scrape endpoint", "Endpoint", endpoint.URL)
 				if endpoint.Status == "Warning" {
 					// check how long has it been since the last successful scrape
 					// if it is more than the timeout, then set to error and stop scraping

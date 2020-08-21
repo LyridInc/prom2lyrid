@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"prom2lyrid/logger"
 
 	"os"
 	"prom2lyrid/api"
@@ -35,10 +36,9 @@ func main() {
 	if os.Getenv("GIN_MODE") == "release" {
 		gin.SetMode(gin.ReleaseMode)
 	}
-
+	logger.GetInstance().Init()
 	manager.GetInstance().Init()
 	go manager.GetInstance().Run(context.Background())
-
 	router := gin.Default()
 	router.Use(ginprom.PromMiddleware(nil))
 	config := cors.DefaultConfig()
