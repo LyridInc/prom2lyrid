@@ -6,12 +6,14 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"github.com/LyridInc/go-sdk"
+	"github.com/go-kit/kit/log/level"
 	"github.com/google/uuid"
 	"github.com/pierrec/lz4"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"prom2lyrid/logger"
 	"prom2lyrid/model"
 	"prom2lyrid/utils"
 	"strings"
@@ -48,12 +50,12 @@ func (manager *NodeManager) Init() {
 	// if we os.Open returns an error then handle it
 	if err != nil {
 		// file does not exist
-		log.Println("Config file not found, generating a new one")
+		level.Info(logger.GetInstance().Logger).Log("Message", "Config file not found, generating a new one")
 		nodeconfig.ID = uuid.New().String()
 		nodeconfig.IsLocal = true
 		nodeconfig.ServerlessUrl = "http://localhost:8080"
 	} else {
-		log.Println("Config file found, loading")
+		level.Info(logger.GetInstance().Logger).Log("Message", "Config file found, loading")
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal([]byte(byteValue), &nodeconfig)
 	}
@@ -72,6 +74,7 @@ func (manager *NodeManager) Init() {
 
 	name, err := os.Hostname()
 	if err != nil {
+		level.Error(logger.GetInstance().Logger).Log("Error", err)
 		panic(err)
 	}
 	manager.Node.HostName = name
@@ -121,7 +124,7 @@ func (manager *NodeManager) Run(ctx context.Context) {
 			//response, _ := sdk.GetInstance().ExecuteFunction("2054f61c-2d57-489f-a172-79fc15c6c20c", "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult"}))
 			//log.Println(string(response))
 
-			log.Println("Uploading scrapes to gateway: ")
+			level.Info(logger.GetInstance().Logger).Log("Message", "Uploading scrapes to gateway")
 			manager.Upload()
 			//result := manager.dumpresult()
 
@@ -149,6 +152,8 @@ func (manager *NodeManager) WriteConfig() {
 	//encoder := json.NewEncoder(file)
 	//encoder.Encode(manager.Node)
 	_ = os.Mkdir(os.Getenv("CONFIG_DIR"), 0755)
+	backupFile := os.Getenv("CONFIG_DIR") + "/config.json.bak." + time.Now().UTC().String()
+	os.Rename(manager.ConfigFile, backupFile)
 	f, _ := json.MarshalIndent(manager.Node, "", " ")
 	_ = ioutil.WriteFile(manager.ConfigFile, f, 0644)
 	manager.mux.Unlock()
@@ -157,7 +162,7 @@ func (manager *NodeManager) WriteConfig() {
 func (manager *NodeManager) Upload() {
 	for _, endpoint := range manager.Node.Endpoints {
 		if endpoint.IsUpdated {
-			log.Println("UpdateScrapeResult for endpoint: ", endpoint.URL)
+			level.Info(logger.GetInstance().Logger).Log("Message", "UpdateScrapeResult for endpoint", "Endpoint",  endpoint.URL)
 			result, err := json.Marshal(endpoint.Result)
 			scrapeResult := string(result)
 			if endpoint.IsCompress{
@@ -179,7 +184,7 @@ func (manager *NodeManager) Upload() {
 				IsCompress: endpoint.IsCompress,
 			}
 			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult}))
-			log.Println("response: ", string(response))
+			level.Debug(logger.GetInstance().Logger).Log("Response", response)
 		}
 	}
 }
