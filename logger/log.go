@@ -3,13 +3,16 @@ package logger
 import (
 	"fmt"
 	"github.com/go-kit/kit/log"
+	"io"
 	"os"
 	"sync"
 )
 
 type LogManager struct {
-	Logger log.Logger
+	Logger    log.Logger
+	LogWriter io.Writer
 }
+
 var instance *LogManager
 var once sync.Once
 
@@ -33,9 +36,9 @@ func (manager *LogManager) Init() {
 			}
 
 		}
-		logFile, _ = os.OpenFile(dir + "/lyrid_sd.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		logFile, _ = os.OpenFile(dir+"/lyrid_sd.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	}
-	manager.Logger = log.NewSyncLogger(log.NewLogfmtLogger(logFile))
+	manager.LogWriter = io.MultiWriter(os.Stdout, logFile)
+	manager.Logger = log.NewSyncLogger(log.NewLogfmtLogger(manager.LogWriter))
 	manager.Logger = log.With(manager.Logger, "ts", log.DefaultTimestampUTC, "caller", log.DefaultCaller)
 }
-

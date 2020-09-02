@@ -17,12 +17,13 @@ require (
 	github.com/pierrec/lz4 v2.5.2+incompatible
 	github.com/prometheus/client_golang v1.5.1
 	github.com/prometheus/client_model v0.2.0
+	github.com/prometheus/common v0.9.1
 	github.com/prometheus/prom2json v1.3.0
 	github.com/swaggo/files v0.0.0-20190704085106-630677cd5c14
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.7 // indirect
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
-	golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3 // indirect
+	golang.org/x/sys v0.0.0-20200802091954-4b90ce9b60b3
 	golang.org/x/tools v0.0.0-20200608174601-1b747fd94509 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
