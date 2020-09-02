@@ -1,0 +1,48 @@
+{
+  "product": "prom2lyrid",
+  "company": "Lyrid",
+  "license": "..\\LICENSE",
+  "upgrade-code": "1f5fb8d9-2b2d-4da1-8f3b-fb52d6c87549",
+  "files": {
+    "guid": "cf7e560e-98a1-4c08-b191-5d2296eb344c",
+    "items": [
+      "prom2lyrid.exe",
+      ".env"
+    ]
+  },
+  "directories": [
+    "..\\web\\build"
+  ],
+  "env": {
+    "guid": "832a51a4-bb03-416f-ab0f-e928799653bd",
+    "vars": [
+      {
+        "name": "PATH",
+        "value": "[INSTALLDIR]",
+        "permanent": "no",
+        "system": "no",
+        "action": "set",
+        "part": "last"
+      }
+    ]
+  },
+  "shortcuts": {
+    "guid": "c6549724-9350-4e15-abb3-3006d503b0bc",
+    "items": [
+      {
+        "name": "prom2lyrid",
+        "description": "Lyrid Service to cache Prometheus Exporters",
+        "target": "[INSTALLDIR]\\prom2lyrid.exe",
+        "wdir": "INSTALLDIR",
+        "arguments": "",
+        "icon": ""
+      }
+    ]
+  },
+  "choco": {
+    "description": "Lyrid Service to cache Prometheus Exporters",
+    "project-url": "Lyrid Service to cache Prometheus Exporters",
+    "tags": "prometheus lyrid serverless exporter",
+    "license-url": "https://github.com/LyridInc/prom2lyrid/blob/master/LICENSE"
+  }
+}

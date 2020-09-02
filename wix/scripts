@@ -1,0 +1,5 @@
+go get github.com/mh-cbon/go-msi
+cd wix
+go-msi set-guid -p wix.json -f
+go-msi generate-templates -p wix.json -s templates -o wxs --version 0.0.2 -l ..\\LICENSE
+go-msi make -p wix.json -s wxs -o C:\Users\IEUser\Desktop\prom2lyrid\build -msi prom2lyrid.msi --version 0.0.2 -k
