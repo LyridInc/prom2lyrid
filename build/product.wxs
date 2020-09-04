@@ -8,13 +8,11 @@
     <?error Unsupported value of sys.BUILDARCH=$(sys.BUILDARCH)?>
 <?endif?>
 
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:fw="http://schemas.microsoft.com/wix/FirewallExtension"
-     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension" >
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
    <Product Id="*" UpgradeCode="1f5fb8d9-2b2d-4da1-8f3b-fb52d6c87549"
             Name="prom2lyrid"
-            Version="1.0.0"
+            Version="0.0.3"
             Manufacturer="Lyrid"
             Language="1033">
 
@@ -22,16 +20,35 @@
 
       <Media Id="1" Cabinet="product.cab" EmbedCab="yes"/>
 
+      <Upgrade Id="1f5fb8d9-2b2d-4da1-8f3b-fb52d6c87549">
+         <UpgradeVersion Minimum="0.0.3" OnlyDetect="yes" Property="NEWERVERSIONDETECTED"/>
+         <UpgradeVersion Minimum="0.0.0" Maximum="0.0.3" IncludeMinimum="yes" IncludeMaximum="no"
+                         Property="OLDERVERSIONBEINGUPGRADED"/>
+      </Upgrade>
+      <Condition Message="A newer version of this software is already installed.">NOT NEWERVERSIONDETECTED</Condition>
+
       <Directory Id="TARGETDIR" Name="SourceDir">
+
          <Directory Id="$(var.Program_Files)">
             <Directory Id="INSTALLDIR" Name="prom2lyrid">
+               
                <Component Id="ApplicationFiles" Guid="cf7e560e-98a1-4c08-b191-5d2296eb344c">
+                  
                     <File Id="ApplicationFile0" Source="..\prom2lyrid.exe"/>
+                  
                     <File Id="ApplicationFile1" Source="..\.env"/>
+                  
                </Component>
-               <Directory Id="APPDIR" Name="web">
-                   <Directory Id="APPDIR0" Name="build" />
-               </Directory>
+               
+               
+               
+              <Directory Id="APPDIR" Name="web">
+                 <Directory Id="APPDIR0" Name="build" />
+              </Directory>
+               
+               <Directory Id="APPDIR1" Name="docs" />
+               
+               
             </Directory>
          </Directory>
 
@@ -96,6 +113,8 @@
          
          
          <ComponentGroupRef Id="AppFiles0" />
+         
+         <ComponentGroupRef Id="AppFiles1" />
          
       </Feature>
 

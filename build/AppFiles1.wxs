@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Fragment>
+        <DirectoryRef Id="APPDIR1">
+            <Component Id="cmp3FE34A7B99CD9EBFC46F5CDD2E83BF2A" Guid="9F38F032-957C-4E4A-9D28-B2F419711252">
+                <File Id="filE02D7201C3D78392820B7BF88EDA3B5C" KeyPath="yes" Source="$(var.SourceDir1)\docs.go" />
+            </Component>
+            <Component Id="cmp5A1BE957CBB8671F5151CEB38F948121" Guid="CAA00C72-C65B-4B94-A78C-6E9FF2434018">
+                <File Id="filB40361C8FE1B4EE91CC03343E19A448B" KeyPath="yes" Source="$(var.SourceDir1)\swagger.json" />
+            </Component>
+            <Component Id="cmp15442B78DB7FA8FF23771F63D835DB79" Guid="9BAF7765-E46B-4BE2-8064-C630F5483FAD">
+                <File Id="fil68C62B46192048198BF872D9B638E511" KeyPath="yes" Source="$(var.SourceDir1)\swagger.yaml" />
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+    <Fragment>
+        <ComponentGroup Id="AppFiles1">
+            <ComponentRef Id="cmp3FE34A7B99CD9EBFC46F5CDD2E83BF2A" />
+            <ComponentRef Id="cmp5A1BE957CBB8671F5151CEB38F948121" />
+            <ComponentRef Id="cmp15442B78DB7FA8FF23771F63D835DB79" />
+        </ComponentGroup>
+    </Fragment>
+</Wix>
