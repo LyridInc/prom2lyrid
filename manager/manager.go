@@ -5,25 +5,28 @@ import (
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
-	"github.com/LyridInc/go-sdk"
-	"github.com/go-kit/kit/log/level"
-	"github.com/google/uuid"
-	"github.com/pierrec/lz4"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
-	"prom2lyrid/logger"
-	"prom2lyrid/model"
-	"prom2lyrid/utils"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/LyridInc/go-sdk"
+	sdkModel "github.com/LyridInc/go-sdk/model"
+	"github.com/go-kit/kit/log/level"
+	"github.com/google/uuid"
+	"github.com/pierrec/lz4"
+	"prom2lyrid/logger"
+	"prom2lyrid/model"
+	"prom2lyrid/utils"
 )
 
 type NodeManager struct {
 	ConfigFile string
 	Node       model.Node
+	Apps	   []*sdkModel.App
 
 	ResultCache map[string]interface{}
 	mux         sync.Mutex
@@ -59,19 +62,22 @@ func (manager *NodeManager) Init() {
 		byteValue, _ := ioutil.ReadAll(jsonFile)
 		json.Unmarshal([]byte(byteValue), &nodeconfig)
 	}
-
 	if nodeconfig.Endpoints == nil {
 		nodeconfig.Endpoints = make(map[string]*model.ExporterEndpoint)
+	}
+	manager.Node = nodeconfig
+	jsonFile.Close()
+	// Init Lyrid SDK
+	if len(manager.Node.Credential.Key) > 0 && len(manager.Node.Credential.Secret) > 0 {
+		sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
 	}
 	if manager.Node.IsLocal {
 		sdk.GetInstance().SimulateServerless(manager.Node.ServerlessUrl)
 	} else {
 		sdk.GetInstance().DisableSimulate()
 	}
-	jsonFile.Close()
-
-	manager.Node = nodeconfig
-
+	//sdk.GetInstance().SetLyridURL("http://localhost:8080") // for testing
+	manager.Apps = sdk.GetInstance().GetApps()
 	name, err := os.Hostname()
 	if err != nil {
 		level.Error(logger.GetInstance().Logger).Log("Error", err)
@@ -80,16 +86,24 @@ func (manager *NodeManager) Init() {
 	manager.Node.HostName = name
 	manager.ResultCache = make(map[string]interface{})
 	manager.WriteConfig()
-	sdk.GetInstance().Initialize(manager.Node.Credential.Key, manager.Node.Credential.Secret)
-	if manager.Node.IsLocal {
-		sdk.GetInstance().SimulateServerless(manager.Node.ServerlessUrl)
-	}
-	sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: manager.Node}))
+	addGatewayBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: manager.Node})
+	manager.ExecuteFunction(addGatewayBody)
 	for _, value := range manager.Node.Endpoints {
 		value.Gateway = manager.Node.ID
 		value.SetUpdate(false)
-		sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value}))
+		addExporterBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value})
+		manager.ExecuteFunction(addExporterBody)
 		go value.Run(context.Background())
+	}
+}
+
+func (manager *NodeManager) ExecuteFunction(body string){
+	for _, app := range manager.Apps {
+		if strings.Contains(strings.ToLower(app.Name), strings.ToLower(os.Getenv("NOC_APP_NAME"))) {
+			level.Debug(logger.GetInstance().Logger).Log("App name", app.Name)
+			response, _ := sdk.GetInstance().ExecuteFunctionByName(app.Name, os.Getenv("NOC_MODULE_NAME"), os.Getenv("NOC_TAG"), os.Getenv("NOC_FUNCTION_NAME"), body)
+			level.Debug(logger.GetInstance().Logger).Log("Response", response)
+		}
 	}
 }
 
@@ -183,8 +197,8 @@ func (manager *NodeManager) Upload() {
 				ScrapeTime: endpoint.LastUpdateTime.UTC(),
 				IsCompress: endpoint.IsCompress,
 			}
-			response, _ := sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult}))
-			level.Debug(logger.GetInstance().Logger).Log("Response", response)
+			body := utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult})
+			manager.ExecuteFunction(body)
 		}
 	}
 }
