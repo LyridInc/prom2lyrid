@@ -11,7 +11,8 @@
     ]
   },
   "directories": [
-    "..\\web\\build"
+    "..\\web\\build",
+    "..\\docs"
   ],
   "env": {
     "guid": "832a51a4-bb03-416f-ab0f-e928799653bd",

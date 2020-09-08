@@ -36,7 +36,7 @@ func (manager *LogManager) Init() {
 			}
 
 		}
-		logFile, _ = os.OpenFile(dir+"/lyrid_sd.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		logFile, _ = os.OpenFile(dir+"/prom2lyrid.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	}
 	manager.LogWriter = io.MultiWriter(os.Stdout, logFile)
 	manager.Logger = log.NewSyncLogger(log.NewLogfmtLogger(manager.LogWriter))
