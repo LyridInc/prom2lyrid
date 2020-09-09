@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/LyridInc/go-sdk"
 	"github.com/gin-gonic/gin"
-	"os"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
 	"prom2lyrid/utils"
@@ -32,11 +31,13 @@ func SetCredential(c *gin.Context) {
 		credential.Key = request["key"]
 		credential.Secret = request["secret"]
 		err = sdk.GetInstance().Initialize(credential.Key, credential.Secret)
+		sdk.GetInstance().GetApps()
 		if err == nil {
 			mgr := manager.GetInstance()
 			mgr.Node.Credential = credential
 			mgr.WriteConfig()
-			sdk.GetInstance().ExecuteFunction(os.Getenv("FUNCTION_ID"), "LYR", utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: mgr.Node}))
+			addGatewayBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: mgr.Node})
+			mgr.ExecuteFunction(addGatewayBody)
 			c.JSON(200, credential)
 		} else {
 			c.JSON(400, err)
