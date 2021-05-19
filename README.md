@@ -1,5 +1,8 @@
 # prom2lyrid
-Lyrid Service to cache Prometheus Exporters 
+
+Full Readme - Coming soon
+
+Reads the local Prometheus metric exporters, caches and propagates them (as a text) to the proxy by calling its HTTP endpoint.
 
 The preferred method to build and run is using docker container by calling:
 
