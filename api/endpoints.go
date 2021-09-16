@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
-	"prom2lyrid/utils"
 )
 
 //
@@ -24,6 +23,7 @@ func GetEndpoints(c *gin.Context) {
 	}
 	c.JSON(200, manager.GetInstance().Node.Endpoints)
 }
+
 //
 // @Summary Add an endpoint
 // @Description Add an endpoint
@@ -41,8 +41,7 @@ func AddEndpoints(c *gin.Context) {
 		endpoint.Gateway = mgr.Node.ID
 		mgr.Node.AddEndpoint(endpoint)
 		mgr.WriteConfig()
-		addExporterBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: endpoint})
-		mgr.ExecuteFunction(addExporterBody)
+		mgr.UpdateExporter(&endpoint)
 		c.JSON(200, endpoint)
 	} else {
 		c.JSON(400, err)
@@ -61,8 +60,7 @@ func DeleteEndpoint(c *gin.Context) {
 	delete(mgr.Node.Endpoints, id)
 	endpoint.Stop()
 	mgr.WriteConfig()
-	deleteExporterBody := utils.JsonEncode(model.LyFnInputParams{Command: "DeleteExporter", Exporter: *endpoint})
-	mgr.ExecuteFunction(deleteExporterBody)
+	mgr.DeleteExporter(endpoint)
 }
 
 func StopEndpoint(c *gin.Context) {
@@ -74,7 +72,7 @@ func StopEndpoint(c *gin.Context) {
 		c.JSON(404, "endpoint not found")
 		return
 	}
-	endpoint.Status = "Stopping";
+	endpoint.Status = "Stopping"
 	endpoint.Stop()
 	mgr.WriteConfig()
 	c.JSON(200, endpoint)
@@ -114,8 +112,7 @@ func UpdateEndpointLabel(c *gin.Context) {
 		endpoint.Stop()
 		endpoint.Status = "Starting"
 		go endpoint.Run(context.Background())
-		updateExporterBody := utils.JsonEncode(model.LyFnInputParams{Command: "UpdateExporter", Exporter: *endpoint})
-		mgr.ExecuteFunction(updateExporterBody)
+		mgr.UpdateExporter(endpoint)
 		c.JSON(200, endpoint)
 	} else {
 		c.JSON(400, err)

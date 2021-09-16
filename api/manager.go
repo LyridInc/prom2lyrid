@@ -5,7 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"prom2lyrid/manager"
 	"prom2lyrid/model"
-	"prom2lyrid/utils"
 )
 
 func Reload(c *gin.Context) {
@@ -36,8 +35,7 @@ func SetCredential(c *gin.Context) {
 			mgr := manager.GetInstance()
 			mgr.Node.Credential = credential
 			mgr.WriteConfig()
-			addGatewayBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: mgr.Node})
-			mgr.ExecuteFunction(addGatewayBody)
+			mgr.AddGateway(&mgr.Node)
 			c.JSON(200, credential)
 		} else {
 			c.JSON(400, err)

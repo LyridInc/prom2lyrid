@@ -64,7 +64,7 @@ func main() {
 	{
 		manager.POST("/reload", api.Reload)
 		//manager.POST("/setup", api.Reload)
-		manager.POST("/dump", api.DumpConfig)
+		manager.GET("/dump", api.DumpConfig)
 	}
 
 	endpoints := router.Group("/endpoints")

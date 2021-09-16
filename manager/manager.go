@@ -26,7 +26,7 @@ import (
 type NodeManager struct {
 	ConfigFile string
 	Node       model.Node
-	Apps	   []*sdkModel.App
+	Apps       []*sdkModel.App
 
 	ResultCache map[string]interface{}
 	mux         sync.Mutex
@@ -86,18 +86,17 @@ func (manager *NodeManager) Init() {
 	manager.Node.HostName = name
 	manager.ResultCache = make(map[string]interface{})
 	manager.WriteConfig()
-	addGatewayBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddGateway", Gateway: manager.Node})
-	manager.ExecuteFunction(addGatewayBody)
+	manager.AddGateway(&manager.Node)
+
 	for _, value := range manager.Node.Endpoints {
 		value.Gateway = manager.Node.ID
 		value.SetUpdate(false)
-		addExporterBody := utils.JsonEncode(model.LyFnInputParams{Command: "AddExporter", Exporter: *value})
-		manager.ExecuteFunction(addExporterBody)
+		manager.UpdateExporter(value)
 		go value.Run(context.Background())
 	}
 }
 
-func (manager *NodeManager) ExecuteFunction(body string){
+func (manager *NodeManager) ExecuteFunction(body string) {
 	for _, app := range manager.Apps {
 		if strings.Contains(strings.ToLower(app.Name), strings.ToLower(os.Getenv("NOC_APP_NAME"))) {
 			level.Debug(logger.GetInstance().Logger).Log("App name", app.Name)
@@ -105,6 +104,35 @@ func (manager *NodeManager) ExecuteFunction(body string){
 			level.Debug(logger.GetInstance().Logger).Log("Response", response)
 		}
 	}
+}
+
+func (manager *NodeManager) ExecuteFunctionWithURIAndMethod(method string, uri string, body string) {
+	for _, app := range manager.Apps {
+		if strings.Contains(strings.ToLower(app.Name), strings.ToLower(os.Getenv("NOC_APP_NAME"))) {
+			level.Debug(logger.GetInstance().Logger).Log("App name", app.Name)
+			response, _ := sdk.GetInstance().ExecuteApp(app.Name, os.Getenv("NOC_MODULE_NAME"), os.Getenv("NOC_TAG"), os.Getenv("NOC_FUNCTION_NAME"), uri, method, body)
+			level.Debug(logger.GetInstance().Logger).Log("Response", response)
+		}
+	}
+}
+
+func (manager *NodeManager) AddGateway(node *model.Node) {
+	addGatewayBody := utils.JsonEncode(node)
+	manager.ExecuteFunctionWithURIAndMethod("POST", "/api/gateways", addGatewayBody)
+}
+
+func (manager *NodeManager) UpdateExporter(exporter *model.ExporterEndpoint) {
+	addExporterBody := utils.JsonEncode(exporter)
+	manager.ExecuteFunctionWithURIAndMethod("POST", "/api/exporters", addExporterBody)
+}
+
+func (manager *NodeManager) UpdateScrapeResult(scrape *model.ScrapesEndpointResult) {
+	updateScrapeBody := utils.JsonEncode(scrape)
+	manager.ExecuteFunctionWithURIAndMethod("POST", "/api/scrapes", updateScrapeBody)
+}
+
+func (manager *NodeManager) DeleteExporter(exporter *model.ExporterEndpoint) {
+	manager.ExecuteFunctionWithURIAndMethod("DELETE", "/api/exporters/"+exporter.ID, "")
 }
 
 func (manager *NodeManager) dumpresult() []interface{} {
@@ -176,10 +204,10 @@ func (manager *NodeManager) WriteConfig() {
 func (manager *NodeManager) Upload() {
 	for _, endpoint := range manager.Node.Endpoints {
 		if endpoint.IsUpdated {
-			level.Info(logger.GetInstance().Logger).Log("Message", "UpdateScrapeResult for endpoint", "Endpoint",  endpoint.URL)
+			level.Info(logger.GetInstance().Logger).Log("Message", "UpdateScrapeResult for endpoint", "Endpoint", endpoint.URL)
 			result, err := json.Marshal(endpoint.Result)
 			scrapeResult := string(result)
-			if endpoint.IsCompress{
+			if endpoint.IsCompress {
 				var writebuffer bytes.Buffer
 				w := lz4.NewWriter(&writebuffer)
 				io.Copy(w, strings.NewReader(string(result)))
@@ -192,13 +220,13 @@ func (manager *NodeManager) Upload() {
 			}
 
 			scrapeEndpointResult := model.ScrapesEndpointResult{
-				ExporterID: endpoint.ID,
+				ExporterID:   endpoint.ID,
 				ScrapeResult: scrapeResult,
-				ScrapeTime: endpoint.LastUpdateTime.UTC(),
-				IsCompress: endpoint.IsCompress,
+				ScrapeTime:   endpoint.LastUpdateTime.UTC(),
+				IsCompress:   endpoint.IsCompress,
 			}
-			body := utils.JsonEncode(model.LyFnInputParams{Command: "UpdateScrapeResult", Exporter: *endpoint, ScapeResult: scrapeEndpointResult})
-			manager.ExecuteFunction(body)
+
+			manager.UpdateScrapeResult(&scrapeEndpointResult)
 		}
 	}
 }
